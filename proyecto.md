@@ -24,6 +24,8 @@ lacroix-cristales/
 ├── core/                 # home, dashboard por rol, partials, templatetags
 ├── usuarios/             # Usuario custom (AbstractUser), señales, forms, mixins,
                           # management commands (cargar_roles), views, urls, tests
+├── clientes/             # Cliente mayorista: validators, forms, views, urls,
+                          # admin, migrations, tests (patrón vertical)
 ├── proveedores/          # Proveedor
 ├── clientes/             # Cliente mayorista
 ├── catalogo/             # Producto
@@ -67,7 +69,7 @@ lacroix-cristales/
 | `core` | Home, dashboard según rol, tags de rol y tests de humo | Creada en Fase 3 (check OK, 4 tests) |
 | `usuarios` | `Usuario` custom, señales de roles, `cargar_roles`, auth y CRUD de usuarios | Completa en Fase 4 (check OK, 15 tests) |
 | `proveedores` | CRUD de proveedores con baja lógica | Planificada (Fase 6) |
-| `clientes` | CRUD de clientes mayoristas con baja lógica | Planificada (Fase 5) |
+| `clientes` | CRUD de clientes mayoristas con baja lógica, validación de CUIT y descuento | Completa en Fase 5 (check OK, 25 tests) — patrón de referencia |
 | `catalogo` | CRUD de artículos con baja lógica | Planificada (Fase 6) |
 | `ventas` | Ventas, detalles, totales y control de stock | Planificada (Fase 6) |
 | `api` | Routers, serializers Base/Get/Post, JWT y Swagger | Planificada (Fase 7) |
@@ -76,10 +78,10 @@ lacroix-cristales/
 
 - `templates/base.html`: Tailwind CDN con paleta `primary` verde, bloques `title`/`content` e inclusión global de los parciales.
 - `templates/partials/`: `navbar.html`, `sidebar.html`, `messages.html` (estilos por nivel), `footer.html`, `modal-base.html` (`<dialog>`) y `live-search.html` (input + contenedor de resultados).
-- `static/js/live-search.js`: debounce de 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState` y event delegation.
+- `static/js/live-search.js`: debounce de 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState`, event delegation y conservación de filtros vigentes (descarta solo `page`).
 - `static/js/modales.js`: apertura por `data-modal-open`, cierre por `data-modal-close` y click en backdrop; Escape nativo.
 - `core/roles.py` resuelve el rol efectivo en backend; `core/templatetags/roles.py` solo lo muestra/condiciona en la UI.
-- Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`, `/accounts/registro/`) quedan cableadas desde Fase 4. Los enlaces de módulos de dominio siguen previstos hasta Fase 5+.
+- Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`, `/accounts/registro/`) quedan cableadas desde Fase 4. `clientes` ya tiene su enlace en el sidebar (Fase 5); los demás módulos de dominio siguen previstos.
 
 ## Autenticación y roles (Fase 4)
 
@@ -90,6 +92,15 @@ lacroix-cristales/
 - `RolRequeridoMixin` y `SoloAdminMixin` validan en backend con 403. El CRUD de `/usuarios/` (listado con live search, alta, edición y baja lógica) es exclusivo de ADM.
 - Baja lógica: `activo=False`, sin borrado físico; un admin no puede darse de baja a sí mismo.
 
+## Módulo `clientes` (Fase 5 — patrón vertical)
+
+- Modelo `Cliente` con `activo` para baja lógica y `descuento_mayorista` en `Decimal`.
+- `validators.py` normaliza el CUIT (11 dígitos → `XX-XXXXXXXX-X`) y lo valida tanto en el modelo como en el form; unicidad en DB, modelo y formulario.
+- Listado `/clientes/`: ADM y VENDEDOR; activos por defecto; filtro `activo=1|0|todos` solo para ADM (en backend se ignora para VENDEDOR); live search por razón social/CUIT/email y paginación de 20.
+- Detalle, alta, edición, baja y reactivación: solo ADM. Baja y reactivación por POST con mensaje; baja con confirmación en `<dialog>`.
+- Templates: `clientes/cliente_list.html`, `cliente_form.html`, `cliente_detail.html` y `partials/cliente_resultados.html`.
+- `cargar_roles` refleja los permisos del modelo: ADM 8, VENDEDOR 1 (`view_cliente`), USUARIO 0.
+
 ## Modelos
 
 Todos los modelos de dominio incluyen `activo = models.BooleanField(default=True)`.
@@ -98,7 +109,7 @@ Todos los modelos de dominio incluyen `activo = models.BooleanField(default=True
 
 - Hereda `username` y `password`. Login por `username`.
 - Propios: nombre (`first_name`), apellido (`last_name`), `email` (único y obligatorio), `contacto` (teléfono/WhatsApp), `rol` (`ADM`/`VENDEDOR`/`USUARIO`), `activo` (vinculado a `is_active`).
-- `rol` se sincroniza desde los grupos de Django Auth mediante `signals`.
+- `rol` y los grupos de Django Auth se sincronizan en ambos sentidos mediante `signals`.
 - `AUTH_USER_MODEL = "usuarios.Usuario"` se define antes de la primera migración.
 
 ### `proveedores.Proveedor`
@@ -107,7 +118,7 @@ Todos los modelos de dominio incluyen `activo = models.BooleanField(default=True
 
 ### `clientes.Cliente`
 
-- Cliente mayorista: `razon_social`, `cuit` (`unique=True`), `contacto`, `email`, `direccion`, `descuento_mayorista` (Decimal opcional), `activo`.
+- Cliente mayorista: `razon_social`, `cuit` (`unique=True`, formato `XX-XXXXXXXX-X` normalizado), `contacto`, `email` (opcional), `direccion`, `descuento_mayorista` (`DecimalField` 0–100, default 0), `activo`.
 
 ### `catalogo.Producto`
 

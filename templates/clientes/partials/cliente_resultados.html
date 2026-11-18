@@ -1,0 +1,89 @@
+<div class="overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="text-xs uppercase text-gray-500">
+      <tr>
+        <th class="py-2 text-left">Razón social</th>
+        <th class="py-2 text-left">CUIT</th>
+        <th class="py-2 text-left">Contacto</th>
+        <th class="py-2 text-left">Email</th>
+        <th class="py-2 text-right">Descuento</th>
+        <th class="py-2 text-left">Estado</th>
+        {% if es_adm %}<th class="py-2 text-right">Acciones</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for cliente in clientes %}
+        <tr class="hover:bg-gray-50 cursor-pointer">
+          <td class="py-2 font-medium text-gray-900">
+            {% if es_adm %}
+              <a href="{% url 'clientes:cliente-detail' cliente.pk %}" class="text-primary-700 hover:underline">{{ cliente.razon_social }}</a>
+            {% else %}
+              {{ cliente.razon_social }}
+            {% endif %}
+          </td>
+          <td class="py-2">{{ cliente.cuit }}</td>
+          <td class="py-2">{{ cliente.contacto|default:"-" }}</td>
+          <td class="py-2">{{ cliente.email|default:"-" }}</td>
+          <td class="py-2 text-right">{{ cliente.descuento_mayorista }}%</td>
+          <td class="py-2">
+            {% if cliente.activo %}
+              <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Activo</span>
+            {% else %}
+              <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Inactivo</span>
+            {% endif %}
+          </td>
+          {% if es_adm %}
+            <td class="py-2 text-right whitespace-nowrap">
+              <a href="{% url 'clientes:cliente-update' cliente.pk %}" class="text-primary-700 hover:underline">Editar</a>
+              {% if cliente.activo %}
+                <button type="button" data-modal-open="modal-baja-cliente-{{ cliente.pk }}" class="ml-3 text-red-600 hover:underline">Dar de baja</button>
+              {% else %}
+                <form method="post" action="{% url 'clientes:cliente-reactivar' cliente.pk %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="ml-3 text-primary-700 hover:underline">Reactivar</button>
+                </form>
+              {% endif %}
+            </td>
+          {% endif %}
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" class="py-4 text-gray-500">No hay clientes para mostrar.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if es_adm %}
+  {% for cliente in clientes %}
+    {% if cliente.activo %}
+      <dialog id="modal-baja-cliente-{{ cliente.pk }}" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
+        <div class="p-6">
+          <div class="flex items-start justify-between">
+            <h2 class="text-lg font-semibold text-gray-700">Dar de baja a {{ cliente.razon_social }}</h2>
+            <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+          </div>
+          <p class="mt-4 text-sm text-gray-600">El cliente quedará inactivo y dejará de aparecer en los listados. No se borra ningún dato.</p>
+          <form method="post" action="{% url 'clientes:cliente-baja' cliente.pk %}" class="mt-6 flex gap-3">
+            {% csrf_token %}
+            <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
+            <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
+          </form>
+        </div>
+      </dialog>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if is_paginated %}
+  <nav class="mt-4 flex gap-4 text-sm text-primary-700">
+    {% if page_obj.has_previous %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>
+    {% endif %}
+    <span class="text-gray-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Siguiente</a>
+    {% endif %}
+  </nav>
+{% endif %}

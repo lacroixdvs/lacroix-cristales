@@ -22,8 +22,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const contenedor = document.getElementById(contenedorId);
     if (!contenedor) return;
 
-    const parametros = new URLSearchParams({ q: input.value.trim() });
-    const url = `${urlBase}?${parametros.toString()}`;
+    // Conserva filtros ya aplicados (por ejemplo, el estado activo/inactivo).
+    const origen = new URL(urlBase, window.location.origin);
+    const parametros =
+      origen.pathname === window.location.pathname
+        ? new URLSearchParams(window.location.search)
+        : new URLSearchParams(origen.search);
+    parametros.delete("page");
+    parametros.set("q", input.value.trim());
+    const url = `${origen.pathname}?${parametros.toString()}`;
 
     try {
       const respuesta = await fetch(url, {

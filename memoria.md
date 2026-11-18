@@ -6,11 +6,11 @@
 ## Estado actual
 
 - **Fecha:** 2026-11-18
-- **Fase:** 4 de 9 — Autenticación, roles y gestión de usuarios (completada)
+- **Fase:** 5 de 9 — App clientes, patrón vertical de referencia (completada)
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
-- **Código generado:** `manage.py`, `config/` con settings separados, app `core` (home, dashboard, UI base) y app `usuarios` completa: señales de roles, `cargar_roles`, auth, registro público y CRUD de usuarios para ADM. Aún no hay modelos de dominio (clientes/proveedores/catálogo/ventas).
-- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` idempotente y 19 tests (4 de `core` + 15 de `usuarios`) **OK** con settings de testing.
+- **Código generado:** `manage.py`, `config/`, `core`, `usuarios` completo y app `clientes` completa (modelo, forms, vistas, templates, admin, tests). Aún no hay proveedores, catálogo ni ventas.
+- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` actualizado y 44 tests (25 de `clientes` + 19 previos) **OK** con settings de testing.
 
 ## Stack definido
 
@@ -69,6 +69,17 @@
 - El test de humo de Fase 3 se adaptó: `rol_de()` prioriza grupos, pero como ahora las señales sincronizan `rol`, el escenario de prueba consiste en crear el usuario como USUARIO y asignarle el grupo VENDEDOR.
 - `migrate` se ejecutó por primera vez en desarrollo. `makemigrations --check --dry-run` reporta "No changes detected".
 
+## Registro técnico de la Fase 5
+
+- `clientes` es el **patrón vertical de referencia** para Fase 6: modelo con validadores, form con `clean_*`, vistas con mixins de rol, templates con parcial de resultados, admin, migración y carpeta `tests/`.
+- CUIT: `clientes/validators.py` expone `normalizar_cuit()` y `CUIT_FORMATO`. Acepta 11 dígitos o `XX-XXXXXXXX-X` y normaliza a este último formato. Se usa en `Modelo.clean()` (para el admin) y en `ClienteForm.clean_cuit()` (con control de unicidad excluyendo la instancia actual). `unique=True` en la DB como última barrera.
+- Descuento mayorista: `DecimalField(max_digits=5, decimal_places=2)` con `MinValueValidator(0)` y `MaxValueValidator(100)` en el modelo, más `clean_descuento_mayorista()` en el form. Nunca `float`.
+- `ClienteListView` (`ADM` + `VENDEDOR`) filtra activos por defecto. El parámetro `activo` (`1`/`0`/`todos`) solo tiene efecto para ADM: para VENDEDOR se fuerza `activo=True` en el queryset, aunque envíe `?activo=0`. El control está en backend, no en la ocultación del `<select>`.
+- Live search con `Q` sobre razón social, CUIT y email; respuesta parcial cuando llega `X-Requested-With: XMLHttpRequest`. `static/js/live-search.js` ahora preserva los query params vigentes y solo descarta `page`, para no perder el filtro de estado al escribir.
+- Detalle, alta, edición, baja y reactivación son **solo ADM** (`SoloAdminMixin`). Baja y reactivación son POST con mensaje de feedback; la baja usa `<dialog>` de confirmación. No hay borrado físico.
+- `cargar_roles` se volvió a ejecutar y asignó los permisos ya existentes de `clientes`: ADM 8, VENDEDOR 1 (`view_cliente`), USUARIO 0 (sigue esperando `catalogo.Producto`).
+- `email` de `Cliente` es opcional (`blank=True`); no se declaró único porque no fue parte de los requisitos.
+
 ## Decisiones heredadas de `inicio.md`
 
 - GitFlow simplificado, PRs chicos y enfocados, commits semánticos. **La IA nunca ejecuta Git: solo sugiere comandos.**
@@ -83,13 +94,14 @@
 
 ## Pendientes
 
-- **Fases 5-6:** CRUDs con baja lógica, cálculo de totales y control de stock.
+- **Fase 6:** apps `proveedores`, `catalogo` y `ventas`; cálculo de totales y control de stock.
 - **Fase 7:** API, Swagger en `/api/schema/swagger/` y JWT.
 - **Fases 8-9:** Docker/Render, README final y cierre de bitácora.
 
 ## Riesgos y recordatorios
 
-- `migrate` **ya se ejecutó en desarrollo** (Fase 4). Toda nueva app de dominio requerirá su propia migración antes de usarla.
+- `migrate` **ya se ejecutó en desarrollo** (Fases 4 y 5). Toda nueva app de dominio requerirá su propia migración antes de usarla.
+- Después de crear cada app de dominio conviene volver a correr `cargar_roles`: el comando es idempotente y completa los permisos de los grupos con los modelos nuevos.
 - Si se crea un administrador con `cargar_roles --crear-admin`, la contraseña debe pasarse por variable de entorno `ADMIN_PASSWORD` en entornos compartidos para no dejar secretos en el historial de comandos.
 - El cambio de estado de la venta y el movimiento de stock deben ocurrir en la misma transacción.
 - No instalar dependencias nuevas sin justificar y consultar. Las de storage S3 se evalúan recién en Fase 8.

@@ -116,3 +116,35 @@
 **Siguiente**
 
 - Fase 5: app `clientes` con CRUD, baja lógica y permisos por rol.
+
+## 2026-11-18 — Fase 5: app clientes (patrón vertical de referencia)
+
+**Qué se hizo**
+
+- Creación de la app `clientes`, registrada en `INSTALLED_APPS`, con el modelo `Cliente` mayorista: `razon_social`, `cuit` (único), `contacto`, `email`, `direccion`, `descuento_mayorista` (`DecimalField` 0–100, default 0) y `activo` (baja lógica).
+- Validación de CUIT compartida en `clientes/validators.py`: acepta `XX-XXXXXXXX-X` u 11 dígitos y normaliza siempre al formato con guiones. Se aplica en el modelo (`RegexValidator` + `clean()`) y en el form (`clean_cuit` con control de unicidad), con mensajes claros por campo.
+- Doble validación del descuento: validadores `MinValueValidator`/`MaxValueValidator` en el modelo y `clean_descuento_mayorista()` en el form.
+- Listado con live search (razón social, CUIT o email) usando `Q`, paginación de 20 y filtro de estado. Activos por defecto; el filtro de inactivos/todos solo es operable para ADM y se ignora en backend para VENDEDOR.
+- Detalle, alta, edición, baja lógica y reactivación exclusivos de ADM, con mensajes de feedback en cada mutación. Baja y reactivación son POST; la baja usa confirmación en `<dialog>`.
+- Templates `clientes/` con Tailwind y la paleta de `design.md`; modelo registrado en el admin y enlace del sidebar cableado.
+- Se mejoró `static/js/live-search.js` para conservar los parámetros ya aplicados (como `activo`) al buscar, descartando solo `page`.
+- Se volvió a correr `cargar_roles` tras la migración: ahora ADM tiene 8 permisos disponibles y VENDEDOR 1 (`view_cliente`).
+
+**Archivos tocados**
+
+- Creados: `clientes/{__init__,apps,models,validators,forms,views,urls,admin}.py`, `clientes/migrations/0001_initial.py`, `clientes/tests/{__init__,test_validaciones,test_permisos,test_listado,test_mutaciones}.py`, `templates/clientes/{cliente_list,cliente_form,cliente_detail,partials/cliente_resultados}.html`.
+- Modificados: `config/settings/base.py`, `config/urls.py`, `templates/partials/sidebar.html`, `static/js/live-search.js`, `bitacora.md`, `memoria.md`, `proyecto.md`.
+
+**Verificaciones**
+
+- `python manage.py check`: **ejecutado, sin problemas**.
+- `python manage.py makemigrations clientes`: **ejecutado**, generó `0001_initial.py`.
+- `python manage.py migrate`: **ejecutado en desarrollo** (aplicó `clientes.0001_initial`).
+- `python manage.py cargar_roles`: **ejecutado** para reflejar los nuevos permisos de `clientes`.
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **ejecutado**, 44 tests (25 nuevos de `clientes` + 19 previos), **OK**.
+- `python manage.py makemigrations --check --dry-run`: **sin cambios detectados**.
+- Git: **ningún comando ejecutado**.
+
+**Siguiente**
+
+- Fase 6: apps `proveedores`, `catalogo` y `ventas`, con cálculo de totales y control de stock.

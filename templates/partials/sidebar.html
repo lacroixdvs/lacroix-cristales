@@ -24,7 +24,7 @@
     {% endif %}
 
     {% if es_adm or es_vendedor %}
-      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Clientes</a></li>
+      <li><a href="{% url 'clientes:cliente-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Clientes</a></li>
     {% endif %}
 
     {% if es_usuario %}

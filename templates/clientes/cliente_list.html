@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes — Vit Cristales{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Clientes</h1>
+    <p class="mt-1 text-sm text-gray-500">Clientes mayoristas de Vit Cristales.</p>
+  </div>
+  {% if es_adm %}
+    <a href="{% url 'clientes:cliente-create' %}" class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700">Nuevo cliente</a>
+  {% endif %}
+</div>
+
+<section class="mt-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+  <form method="get" class="mb-4 flex flex-col gap-3 sm:flex-row">
+    <div class="flex-1">
+      <label for="buscador-clientes" class="sr-only">Buscar clientes</label>
+      <input id="buscador-clientes" type="search" name="q" value="{{ q }}"
+             data-live-search="resultados-clientes"
+             placeholder="Buscar por razón social, CUIT o email..."
+             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600">
+    </div>
+
+    {% if es_adm %}
+      <div class="sm:w-48">
+        <label for="filtro-estado" class="sr-only">Estado</label>
+        <select id="filtro-estado" name="activo"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600">
+          <option value="1" {% if activo == "1" %}selected{% endif %}>Activos</option>
+          <option value="0" {% if activo == "0" %}selected{% endif %}>Inactivos</option>
+          <option value="todos" {% if activo == "todos" %}selected{% endif %}>Todos</option>
+        </select>
+      </div>
+      <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Filtrar</button>
+    {% endif %}
+  </form>
+
+  <div id="resultados-clientes">
+    {% include "clientes/partials/cliente_resultados.html" %}
+  </div>
+</section>
+{% endblock %}
