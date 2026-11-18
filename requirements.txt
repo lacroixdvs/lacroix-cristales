@@ -1,0 +1,20 @@
+# Dependencias base — Vit Cristales
+# Instalar solo con aprobación previa. storage S3 se evalúa en Fase 8.
+
+# Framework y utilidades
+Django>=5.1,<6.0
+python-dotenv>=1.0,<2.0
+
+# API REST
+djangorestframework>=3.15,<4.0
+djangorestframework-simplejwt>=5.3,<6.0
+django-filter>=24.3,<26.0
+drf-spectacular>=0.27,<1.0
+
+# Base de datos
+dj-database-url>=2.2,<3.0
+psycopg[binary]>=3.2,<4.0
+
+# Producción y archivos estáticos
+whitenoise>=6.6,<7.0
+gunicorn>=22,<24

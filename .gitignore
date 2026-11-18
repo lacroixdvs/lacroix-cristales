@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+env/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Secretos (NO versionar). .env.example SÍ se versiona.
+.env
+.env.*.local
+
+# Herramientas de desarrollo
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.vscode/
+.idea/
+*.swp
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
