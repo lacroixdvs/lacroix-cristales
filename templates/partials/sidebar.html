@@ -11,7 +11,7 @@
     </li>
 
     {% if es_adm %}
-      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Usuarios</a></li>
+      <li><a href="{% url 'usuarios:usuario-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Usuarios</a></li>
       <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Proveedores</a></li>
     {% endif %}
 

@@ -6,11 +6,11 @@
 ## Estado actual
 
 - **Fecha:** 2026-11-18
-- **Fase:** 3 de 9 — Core y UI base (completada)
+- **Fase:** 4 de 9 — Autenticación, roles y gestión de usuarios (completada)
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
-- **Código generado:** `manage.py`, `config/` con settings separados, app `usuarios` con su migración inicial y app `core` con home, dashboard por rol, templates base/parciales y esqueletos JS. Aún no hay modelos de dominio ni CRUDs.
-- **Verificación:** `python manage.py check` sin problemas y 4 tests de humo de `core` ejecutados con los settings de testing: **OK**.
+- **Código generado:** `manage.py`, `config/` con settings separados, app `core` (home, dashboard, UI base) y app `usuarios` completa: señales de roles, `cargar_roles`, auth, registro público y CRUD de usuarios para ADM. Aún no hay modelos de dominio (clientes/proveedores/catálogo/ventas).
+- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` idempotente y 19 tests (4 de `core` + 15 de `usuarios`) **OK** con settings de testing.
 
 ## Stack definido
 
@@ -49,14 +49,25 @@
 
 ## Registro técnico de la Fase 3
 
-- El rol efectivo se resuelve en `core/roles.py`: grupos de Django Auth como fuente de verdad con prioridad `ADM` > `VENDEDOR` > `USUARIO`, y fallback al campo `Usuario.rol` hasta que las señales de Fase 4 lo sincronicen.
+- El rol efectivo se resuelve en `core/roles.py`: grupos de Django Auth con prioridad `ADM` > `VENDEDOR` > `USUARIO`, y fallback al campo `Usuario.rol`. Desde Fase 4 ambos se mantienen sincronizados (ver registro de Fase 4).
 - `DashboardView` usa `LoginRequiredMixin` y entrega a la plantilla `rol`, `rol_etiqueta`, `modulos` y flags `es_adm`/`es_vendedor`/`es_usuario`. La lógica de qué módulo se muestra vive en `MODULOS_POR_ROL` (backend), no en el template.
 - Los tags `rol_actual` y `es_rol` solo presentan/condicionan la UI; no validan permisos.
 - Tailwind se carga por CDN con un `tailwind.config` inline que define la paleta `primary` (verde) de `design.md`. No hay build step.
 - `base.html` incluye los parciales `navbar`, `sidebar`, `messages` y `footer` de forma global. `messages.html` aplica clases por nivel del mensaje.
 - `static/js/live-search.js` y `static/js/modales.js` son esqueletos genéricos configurados por atributos `data-*`; aún no apuntan a endpoints reales de dominio (eso llega con los CRUDs).
-- `LOGIN_URL = "/accounts/login/"` y los enlaces de login/logout del navbar quedan como rutas previstas: se cablean recién en Fase 4.
+- `LOGIN_URL = "/accounts/login/"` y los enlaces de login/logout del navbar quedan como rutas previstas: se cablean recién en Fase 4. **(Ya cableados en Fase 4.)**
 - Se agregó `STATICFILES_DIRS = [BASE_DIR / "static"]` para que `{% static %}` resuelva los JS.
+
+## Registro técnico de la Fase 4
+
+- Sincronización bidireccional en `usuarios/signals.py`: `post_save` ajusta grupos cuando cambia `rol`; `m2m_changed` ajusta `rol` cuando cambian los grupos (prioridad ADM > VENDEDOR > USUARIO). `pre_save` guarda el rol original para no repetir trabajo y hace `is_active = activo`.
+- `activo` es el campo canónico de baja lógica; `is_active` queda subordinado a él. Se extrajo esa responsabilidad del `save()` del modelo.
+- Las señales se registran en `UsuariosConfig.ready()`; `apps.py` marca `default = True`.
+- `cargar_roles` es idempotente. Los permisos de dominio todavía no existen, por lo que se omiten silenciosamente capturando `ContentType.DoesNotExist` y `Permission.DoesNotExist`; se reforzará al crear esas apps. La contraseña del admin inicial se lee de `--admin-password` o `ADMIN_PASSWORD` y nunca se imprime.
+- El registro público usa `UserCreationForm` y fuerza `rol=Rol.USUARIO`; el `clean_email` es case-insensitive.
+- `RolRequeridoMixin` / `SoloAdminMixin` validan en backend con `PermissionDenied` (403), no solo ocultando enlaces. El CRUD de usuarios es exclusivo de ADM; la baja es lógica (`activo=False`) e impide auto-baja.
+- El test de humo de Fase 3 se adaptó: `rol_de()` prioriza grupos, pero como ahora las señales sincronizan `rol`, el escenario de prueba consiste en crear el usuario como USUARIO y asignarle el grupo VENDEDOR.
+- `migrate` se ejecutó por primera vez en desarrollo. `makemigrations --check --dry-run` reporta "No changes detected".
 
 ## Decisiones heredadas de `inicio.md`
 
@@ -72,14 +83,14 @@
 
 ## Pendientes
 
-- **Fase 4:** completar `usuarios` con registro público, login/logout, grupos `ADM`/`VENDEDOR`/`USUARIO` y señales de rol/`is_active` (el modelo y la migración inicial ya existen).
 - **Fases 5-6:** CRUDs con baja lógica, cálculo de totales y control de stock.
 - **Fase 7:** API, Swagger en `/api/schema/swagger/` y JWT.
 - **Fases 8-9:** Docker/Render, README final y cierre de bitácora.
 
 ## Riesgos y recordatorios
 
-- Ya existe la app `usuarios` y `AUTH_USER_MODEL` está configurado, pero **`migrate` todavía no se corrió**; se ejecutará cuando se completen las apps de dominio (Fase 5-6) o cuando se necesite probar auth.
+- `migrate` **ya se ejecutó en desarrollo** (Fase 4). Toda nueva app de dominio requerirá su propia migración antes de usarla.
+- Si se crea un administrador con `cargar_roles --crear-admin`, la contraseña debe pasarse por variable de entorno `ADMIN_PASSWORD` en entornos compartidos para no dejar secretos en el historial de comandos.
 - El cambio de estado de la venta y el movimiento de stock deben ocurrir en la misma transacción.
 - No instalar dependencias nuevas sin justificar y consultar. Las de storage S3 se evalúan recién en Fase 8.
 - No tocar `.env`, CORS, CSRF, `ALLOWED_HOSTS` ni settings de seguridad sin advertirlo antes.

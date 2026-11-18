@@ -87,3 +87,32 @@
 **Siguiente**
 
 - Fase 4: completar `usuarios` con registro público, login/logout, grupos `ADM`/`VENDEDOR`/`USUARIO` y señales de rol/`is_active`.
+
+## 2026-11-18 — Fase 4: autenticación, roles y gestión de usuarios
+
+**Qué se hizo**
+
+- Señales en `usuarios/signals.py` registradas desde `UsuariosConfig.ready()`: sincronización bidireccional grupo↔`rol` (prioridad ADM > VENDEDOR > USUARIO) y de `activo`→`is_active`. Se extrajo esa responsabilidad del `save()` del modelo.
+- Management command `cargar_roles` idempotente: crea los 3 grupos con los permisos disponibles en este momento (los permisos de dominio de Fase 5-6 se omiten sin error) y opción `--crear-admin` con password por argumento o variable `ADMIN_PASSWORD` (nunca se imprime).
+- Flujo de autenticación completo: login/logout de Django, registro público que fuerza el grupo/rol USUARIO, templates dedicados y enlaces cableados en el navbar/home/sidebar.
+- Mixins `RolRequeridoMixin` y `SoloAdminMixin` con control en backend (`PermissionDenied`), más CRUD de usuarios solo para ADM: listado con live search y paginación, alta, edición de datos/rol y baja lógica (`activo=False`, sin borrado). El admin no puede darse de baja a sí mismo.
+- Se corrigió el manejo de excepciones del command: Django lanza `ContentType.DoesNotExist` (no `Permission.DoesNotExist`) cuando la app de dominio todavía no existe.
+- Se ajustó el test de humo de Fase 3 para reflejar la sincronización bidireccional definitiva: ahora crea el usuario como USUARIO y le asigna el grupo VENDEDOR.
+
+**Archivos tocados**
+
+- Creados: `usuarios/signals.py`, `usuarios/forms.py`, `usuarios/mixins.py`, `usuarios/views.py`, `usuarios/urls.py`, `usuarios/management/{__init__,commands/__init__,commands/cargar_roles}.py`, `usuarios/tests/{__init__,test_signals,test_registro,test_permisos,test_baja,test_cargar_roles}.py`, `templates/registration/{login,registro}.html`, `templates/usuarios/{usuario_list,usuario_form,partials/usuario_resultados}.html`.
+- Modificados: `usuarios/apps.py`, `usuarios/models.py`, `config/urls.py`, `templates/partials/{navbar,sidebar}.html`, `templates/home.html`, `core/tests.py`, `bitacora.md`, `memoria.md`, `proyecto.md`.
+
+**Verificaciones**
+
+- `python manage.py check`: **ejecutado, sin problemas**.
+- `python manage.py migrate`: **ejecutado en desarrollo** (aplicó `usuarios.0001_initial` y el resto de apps de Django). Era la primera vez.
+- `python manage.py cargar_roles`: **ejecutado dos veces** para confirmar idempotencia (grupos existentes en la segunda corrida).
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **ejecutado**, 19 tests (15 nuevos de `usuarios` + 4 de `core`), **OK**.
+- `python manage.py makemigrations --check --dry-run`: **sin cambios detectados**.
+- Git: **ningún comando ejecutado**.
+
+**Siguiente**
+
+- Fase 5: app `clientes` con CRUD, baja lógica y permisos por rol.

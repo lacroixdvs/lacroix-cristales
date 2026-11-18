@@ -5,11 +5,19 @@
 
     <nav class="flex items-center gap-4 text-sm text-gray-600">
       {% if request.user.is_authenticated %}
+        {% es_rol request.user "ADM" as es_adm %}
+        {% if es_adm %}
+          <a href="{% url 'usuarios:usuario-list' %}" class="text-gray-700 hover:underline">Usuarios</a>
+        {% endif %}
         <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">{{ request.user|rol_actual }}</span>
         <span class="font-medium text-gray-900">{{ request.user.get_full_name|default:request.user.username }}</span>
-        <a href="/accounts/logout/" class="text-red-600 hover:underline">Cerrar sesión</a>
+        <form method="post" action="{% url 'usuarios:logout' %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="text-red-600 hover:underline">Cerrar sesión</button>
+        </form>
       {% else %}
-        <a href="/accounts/login/" class="rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-700">Ingresar</a>
+        <a href="{% url 'usuarios:login' %}" class="rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-700">Ingresar</a>
+        <a href="{% url 'usuarios:registro' %}" class="text-primary-700 hover:underline">Registrate</a>
       {% endif %}
     </nav>
   </div>

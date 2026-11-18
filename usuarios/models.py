@@ -13,8 +13,9 @@ class Rol(models.TextChoices):
 class Usuario(AbstractUser):
     """Usuario del sistema: login por username, email único y baja lógica.
 
-    Los grupos de Django Auth son la fuente de verdad de permisos; `rol` se
-    sincronizará desde esos grupos mediante signals en la Fase 4.
+    Los grupos de Django Auth y `rol` se mantienen sincronizados mediante
+    signals. `activo` es el estado canónico de baja lógica y `is_active` lo
+    refleja para Django.
     """
 
     email = models.EmailField("email", unique=True)
@@ -31,8 +32,3 @@ class Usuario(AbstractUser):
     def __str__(self):
         """Muestra el nombre completo y, si falta, el username."""
         return self.get_full_name() or self.username
-
-    def save(self, *args, **kwargs):
-        """Mantiene `is_active` alineado con el campo `activo` del proyecto."""
-        self.is_active = self.activo
-        return super().save(*args, **kwargs)

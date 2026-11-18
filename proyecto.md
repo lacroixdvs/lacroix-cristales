@@ -22,7 +22,8 @@ lacroix-cristales/
 │   ├── asgi.py
 │   └── wsgi.py
 ├── core/                 # home, dashboard por rol, partials, templatetags
-├── usuarios/             # Usuario custom (AbstractUser), grupos, signals
+├── usuarios/             # Usuario custom (AbstractUser), señales, forms, mixins,
+                          # management commands (cargar_roles), views, urls, tests
 ├── proveedores/          # Proveedor
 ├── clientes/             # Cliente mayorista
 ├── catalogo/             # Producto
@@ -31,8 +32,8 @@ lacroix-cristales/
 ├── templates/
 │   ├── base.html
 │   ├── home.html
-│   ├── partials/         # navbar, sidebar, messages, footer
-│   ├── registration/     # login, registro, reset
+│   ├── partials/         # navbar, sidebar, messages, footer, modal, live search
+│   ├── registration/     # login, registro (reset pendiente)
 │   ├── usuarios/
 │   ├── proveedores/
 │   ├── clientes/
@@ -64,7 +65,7 @@ lacroix-cristales/
 |---|---|---|
 | `config` | Configuración por ambiente, URLs raíz, WSGI/ASGI | Creada en Fase 2 (check OK) |
 | `core` | Home, dashboard según rol, tags de rol y tests de humo | Creada en Fase 3 (check OK, 4 tests) |
-| `usuarios` | `Usuario` custom, grupos `ADM`/`VENDEDOR`/`USUARIO`, registro y señales | Modelo y `0001_initial.py` creados en Fase 2; registro/señales en Fase 4 |
+| `usuarios` | `Usuario` custom, señales de roles, `cargar_roles`, auth y CRUD de usuarios | Completa en Fase 4 (check OK, 15 tests) |
 | `proveedores` | CRUD de proveedores con baja lógica | Planificada (Fase 6) |
 | `clientes` | CRUD de clientes mayoristas con baja lógica | Planificada (Fase 5) |
 | `catalogo` | CRUD de artículos con baja lógica | Planificada (Fase 6) |
@@ -78,7 +79,16 @@ lacroix-cristales/
 - `static/js/live-search.js`: debounce de 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState` y event delegation.
 - `static/js/modales.js`: apertura por `data-modal-open`, cierre por `data-modal-close` y click en backdrop; Escape nativo.
 - `core/roles.py` resuelve el rol efectivo en backend; `core/templatetags/roles.py` solo lo muestra/condiciona en la UI.
-- Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`) y los enlaces de los módulos de dominio quedan previstos hasta Fase 4+.
+- Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`, `/accounts/registro/`) quedan cableadas desde Fase 4. Los enlaces de módulos de dominio siguen previstos hasta Fase 5+.
+
+## Autenticación y roles (Fase 4)
+
+- Login por `username` con sesiones de Django; logout por POST desde el navbar.
+- Registro público en `/accounts/registro/` con `RegistroForm`: fuerza `rol=USUARIO` y grupo `USUARIO`.
+- Grupos de Django Auth `ADM`, `VENDEDOR`, `USUARIO` creados/actualizados por `python manage.py cargar_roles` (idempotente). `--crear-admin` crea el administrador inicial solo si no existe; contraseña vía `--admin-password` o `ADMIN_PASSWORD`.
+- `usuarios/signals.py` mantiene sincronizados grupo↔`rol` (prioridad ADM > VENDEDOR > USUARIO) y `activo`→`is_active`.
+- `RolRequeridoMixin` y `SoloAdminMixin` validan en backend con 403. El CRUD de `/usuarios/` (listado con live search, alta, edición y baja lógica) es exclusivo de ADM.
+- Baja lógica: `activo=False`, sin borrado físico; un admin no puede darse de baja a sí mismo.
 
 ## Modelos
 

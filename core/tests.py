@@ -45,6 +45,6 @@ class CoreSmokeTests(TestCase):
                 self.assertContains(respuesta, modulo)
 
     def test_grupo_define_el_rol_efectivo(self):
-        usuario = self.crear_usuario("vendedor", "vendedor@ejemplo.com", Rol.ADM)
+        usuario = self.crear_usuario("vendedor", "vendedor@ejemplo.com", Rol.USUARIO)
         usuario.groups.add(Group.objects.create(name=Rol.VENDEDOR))
         self.assertEqual(rol_de(usuario), Rol.VENDEDOR)
