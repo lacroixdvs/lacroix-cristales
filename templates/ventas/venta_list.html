@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Ventas — Vit Cristales{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Ventas</h1>
+    <p class="mt-1 text-sm text-gray-500">Borradores, ventas confirmadas y control de stock.</p>
+  </div>
+  <a href="{% url 'ventas:venta-create' %}" class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700">Nueva venta</a>
+</div>
+
+<section class="mt-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+  <form method="get" class="mb-4 flex flex-col gap-3 sm:flex-row">
+    <div class="flex-1">
+      <label for="buscador-ventas" class="sr-only">Buscar ventas</label>
+      <input id="buscador-ventas" type="search" name="q" value="{{ q }}"
+             data-live-search="resultados-ventas"
+             placeholder="Buscar por cliente, CUIT o vendedor..."
+             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600">
+    </div>
+    <div class="sm:w-48">
+      <label for="filtro-estado" class="sr-only">Estado</label>
+      <select id="filtro-estado" name="estado"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600">
+        <option value="">Todos los estados</option>
+        {% for valor, etiqueta in estados %}
+          <option value="{{ valor }}" {% if estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if es_adm %}
+      <div class="sm:w-40">
+        <label for="filtro-activo" class="sr-only">Activo</label>
+        <select id="filtro-activo" name="activo"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600">
+          <option value="1" {% if activo == "1" %}selected{% endif %}>Activas</option>
+          <option value="0" {% if activo == "0" %}selected{% endif %}>Inactivas</option>
+          <option value="todos" {% if activo == "todos" %}selected{% endif %}>Todas</option>
+        </select>
+      </div>
+    {% endif %}
+    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Filtrar</button>
+  </form>
+
+  <div id="resultados-ventas">
+    {% include "ventas/partials/venta_resultados.html" %}
+  </div>
+</section>
+{% endblock %}

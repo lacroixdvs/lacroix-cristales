@@ -68,10 +68,10 @@ lacroix-cristales/
 | `config` | Configuración por ambiente, URLs raíz, WSGI/ASGI | Creada en Fase 2 (check OK) |
 | `core` | Home, dashboard según rol, tags de rol y tests de humo | Creada en Fase 3 (check OK, 4 tests) |
 | `usuarios` | `Usuario` custom, señales de roles, `cargar_roles`, auth y CRUD de usuarios | Completa en Fase 4 (check OK, 15 tests) |
-| `proveedores` | CRUD de proveedores con baja lógica | Planificada (Fase 6) |
+| `proveedores` | CRUD de proveedores con baja lógica | Completa en Fase 6 (check OK, 16 tests) |
 | `clientes` | CRUD de clientes mayoristas con baja lógica, validación de CUIT y descuento | Completa en Fase 5 (check OK, 25 tests) — patrón de referencia |
-| `catalogo` | CRUD de artículos con baja lógica | Planificada (Fase 6) |
-| `ventas` | Ventas, detalles, totales y control de stock | Planificada (Fase 6) |
+| `catalogo` | Productos, baja lógica y presupuesto en sesión | Completa en Fase 6 (check OK, 20 tests) |
+| `ventas` | Ventas, detalles, totales y control de stock | Completa en Fase 6 (check OK, 22 tests) |
 | `api` | Routers, serializers Base/Get/Post, JWT y Swagger | Planificada (Fase 7) |
 
 ## Capa de presentación (Fase 3)
@@ -81,7 +81,7 @@ lacroix-cristales/
 - `static/js/live-search.js`: debounce de 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState`, event delegation y conservación de filtros vigentes (descarta solo `page`).
 - `static/js/modales.js`: apertura por `data-modal-open`, cierre por `data-modal-close` y click en backdrop; Escape nativo.
 - `core/roles.py` resuelve el rol efectivo en backend; `core/templatetags/roles.py` solo lo muestra/condiciona en la UI.
-- Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`, `/accounts/registro/`) quedan cableadas desde Fase 4. `clientes` ya tiene su enlace en el sidebar (Fase 5); los demás módulos de dominio siguen previstos.
+- Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`, `/accounts/registro/`) quedan cableadas desde Fase 4. Desde Fase 6 el sidebar tiene enlaces reales a todos los módulos de dominio y al presupuesto.
 
 ## Autenticación y roles (Fase 4)
 
@@ -101,6 +101,17 @@ lacroix-cristales/
 - Templates: `clientes/cliente_list.html`, `cliente_form.html`, `cliente_detail.html` y `partials/cliente_resultados.html`.
 - `cargar_roles` refleja los permisos del modelo: ADM 8, VENDEDOR 1 (`view_cliente`), USUARIO 0.
 
+## Módulos de la Fase 6
+
+- **Común:** el validador de CUIT pasó a `core/validators.py` (`clientes/validators.py` solo re-exporta) y `core/forms.py` centraliza el estilo Tailwind.
+- **`proveedores`:** `Proveedor` con CUIT normalizado/único, `rubro` opcional y baja lógica. CRUD exclusivo de ADM con live search, filtro de estado, paginación de 20, detalle, alta, edición, baja y reactivación con `<dialog>`.
+- **`catalogo`:** `Producto` con categorías `VIDRIO`/`MAMPARA`/`ESPEJO`/`CERRAMIENTO`, precio > 0, stock y FK protegida a `Proveedor`. ADM hace CRUD; VENDEDOR y USUARIO leen y buscan por código/nombre/categoría; el filtro de inactivos se ignora para no-ADM.
+- **Presupuesto:** `catalogo/presupuesto.py` guarda la selección en `request.session`; permite agregar, cambiar cantidades, quitar y vaciar, mostrando subtotal/total con precios vigentes. No descuenta stock ni crea ventas. Ruta `/catalogo/presupuesto/` (`/presupuesto/` redirige).
+- **`ventas`:** `Venta` + `DetalleVenta` con snapshot de precio, descuento mayorista explícito y recálculo de totales en `ventas/services.py`.
+- **Stock:** `confirmar_venta()` valida ítems activos, productos activos y stock suficiente antes de descontar; todo en `transaction.atomic()` con `select_for_update()`. `cancelar_venta()` y `dar_de_baja()` reintegran stock; solo ADM puede dar de baja ventas confirmadas.
+- **Permisos:** ADM accede a todo; VENDEDOR crea borradores, carga/quita ítems, confirma y consulta solo sus ventas; USUARIO no entra a `ventas`.
+- `cargar_roles` tras Fase 6: ADM 24 permisos, VENDEDOR 8, USUARIO 1 (`view_producto`).
+
 ## Modelos
 
 Todos los modelos de dominio incluyen `activo = models.BooleanField(default=True)`.
@@ -114,7 +125,7 @@ Todos los modelos de dominio incluyen `activo = models.BooleanField(default=True
 
 ### `proveedores.Proveedor`
 
-- `razon_social`, `cuit` (`unique=True`), `contacto`, `email`, `direccion`, `activo`.
+- `razon_social`, `cuit` (`unique=True`, normalizado), `contacto`, `email`, `direccion`, `rubro` (opcional), `activo`. Los productos referenciados usan `on_delete=PROTECT`.
 
 ### `clientes.Cliente`
 
@@ -122,15 +133,15 @@ Todos los modelos de dominio incluyen `activo = models.BooleanField(default=True
 
 ### `catalogo.Producto`
 
-- `codigo` (`unique=True`), `nombre`, `categoria` (`Vidrio` / `Mampara` / `Espejo` / `Cerramiento de oficina`), `descripcion`, `espesor`, `precio_unitario` (Decimal), `stock`, `proveedor` (FK a `Proveedor`), `activo`.
+- `codigo` (`unique=True`), `nombre`, `categoria` (`VIDRIO` / `MAMPARA` / `ESPEJO` / `CERRAMIENTO`), `descripcion`, `espesor`, `precio_unitario` (`DecimalField` > 0), `stock` (`PositiveIntegerField`), `proveedor` (FK a `Proveedor`, `PROTECT`), `activo`.
 
 ### `ventas.Venta`
 
-- `cliente` (FK a `Cliente`), `vendedor` (FK a `Usuario`, restringido al grupo `VENDEDOR`), `fecha`, `estado` (`BORRADOR` / `CONFIRMADA` / `ANULADA`), `total` (calculado), `activo`.
+- `cliente` (FK a `Cliente`, `PROTECT`), `vendedor` (FK a `Usuario`, `PROTECT`; el form solo ofrece usuarios del grupo `VENDEDOR`), `fecha` (`auto_now_add`), `estado` (`BORRADOR` / `CONFIRMADA` / `CANCELADA`), `observaciones` (opcional), `subtotal`, `descuento_mayorista` (snapshot del cliente), `total` (calculado), `activo`.
 
 ### `ventas.DetalleVenta`
 
-- `venta` (FK), `producto` (FK), `cantidad`, `precio_unitario` (copia del catálogo al crear el detalle), `subtotal` (calculado), `activo`.
+- `venta` (FK con `related_name="detalles"`), `producto` (FK a `Producto`, `PROTECT`), `cantidad` (`>= 1`), `precio_unitario` (snapshot del catálogo al crear el detalle), `subtotal` (calculado), `activo`.
 
 ### Relaciones
 
@@ -142,9 +153,9 @@ Usuario (vendedor) 1 ──── * Venta
 
 ## Reglas de negocio
 
-- `subtotal = cantidad × precio_unitario`; `total = suma de subtotales activos`.
+- `subtotal = cantidad × precio_unitario`; `total = (suma de subtotales activos) − descuento_mayorista%` del cliente, redondeado a 2 decimales (`ROUND_HALF_UP`). El descuento se persiste y se muestra por porcentaje e importe.
 - El `precio_unitario` del detalle queda como snapshot histórico; no se recalcula si cambia el catálogo.
-- Con `transaction.atomic`: al pasar a `CONFIRMADA` se valida y descuenta el stock; al anular o dar de baja se reintegra.
+- Con `transaction.atomic` y `select_for_update()`: al pasar a `CONFIRMADA` se validan todos los ítems y se descuenta el stock solo si todo pasa; al cancelar o dar de baja se reintegra.
 - Baja lógica en todos los modelos; ninguna acción de UI borra filas físicamente.
 - Importes con `Decimal`, nunca `float`.
 - Validaciones en modelos/forms/serializers; las reglas cruzadas siempre en backend.
@@ -158,16 +169,16 @@ Usuario (vendedor) 1 ──── * Venta
 | Proveedores | CRUD total | ✘ | ✘ |
 | Clientes mayoristas | CRUD total | Solo lectura | ✘ |
 | Catálogo de artículos | CRUD total | Solo lectura | Solo lectura + seleccionar |
-| Ventas | CRUD total | Crear / consultar / editar borradores | ✘ |
+| Ventas | CRUD total | Crear / consultar / editar borradores, cargar ítems y confirmar (solo propias) | ✘ |
 | Baja lógica de ventas | ✔ (incluso confirmadas) | ✘ | ✘ |
 | Presupuesto en sesión | ✔ | ✔ | ✔ (propio) |
 | API | Según permisos | Según permisos | Solo GET de catálogo |
 
 Los grupos de Django Auth son la fuente de verdad de permisos; el campo `rol` y el ocultamiento en templates son derivados/cosméticos.
 
-## Endpoints previstos
+## Endpoints
 
-**Web (MVT):** `/`, `/dashboard/`, `/accounts/login/`, `/accounts/registro/`, `/usuarios/`, `/proveedores/`, `/clientes/`, `/catalogo/`, `/ventas/`, `/presupuesto/`.
+**Web (MVT) implementados:** `/`, `/dashboard/`, `/accounts/login/`, `/accounts/registro/`, `/usuarios/`, `/proveedores/`, `/clientes/`, `/catalogo/`, `/catalogo/presupuesto/` (alias: `/presupuesto/`), `/ventas/`.
 
 **API REST:** `/api/token/`, `/api/token/refresh/`, `/api/usuarios/`, `/api/proveedores/`, `/api/clientes/`, `/api/catalogo/`, `/api/ventas/`, `/api/schema/swagger/`.
 

@@ -1,0 +1,79 @@
+<div class="overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="text-xs uppercase text-gray-500">
+      <tr>
+        <th class="py-2 text-left">Razón social</th>
+        <th class="py-2 text-left">CUIT</th>
+        <th class="py-2 text-left">Rubro</th>
+        <th class="py-2 text-left">Contacto</th>
+        <th class="py-2 text-left">Email</th>
+        <th class="py-2 text-left">Estado</th>
+        <th class="py-2 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for proveedor in proveedores %}
+        <tr class="hover:bg-gray-50 cursor-pointer">
+          <td class="py-2 font-medium text-gray-900">
+            <a href="{% url 'proveedores:proveedor-detail' proveedor.pk %}" class="text-primary-700 hover:underline">{{ proveedor.razon_social }}</a>
+          </td>
+          <td class="py-2">{{ proveedor.cuit }}</td>
+          <td class="py-2">{{ proveedor.rubro|default:"-" }}</td>
+          <td class="py-2">{{ proveedor.contacto|default:"-" }}</td>
+          <td class="py-2">{{ proveedor.email|default:"-" }}</td>
+          <td class="py-2">
+            {% if proveedor.activo %}
+              <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Activo</span>
+            {% else %}
+              <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="py-2 text-right whitespace-nowrap">
+            <a href="{% url 'proveedores:proveedor-update' proveedor.pk %}" class="text-primary-700 hover:underline">Editar</a>
+            {% if proveedor.activo %}
+              <button type="button" data-modal-open="modal-baja-proveedor-{{ proveedor.pk }}" class="ml-3 text-red-600 hover:underline">Dar de baja</button>
+            {% else %}
+              <form method="post" action="{% url 'proveedores:proveedor-reactivar' proveedor.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="ml-3 text-primary-700 hover:underline">Reactivar</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="py-4 text-gray-500">No hay proveedores para mostrar.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% for proveedor in proveedores %}
+  {% if proveedor.activo %}
+    <dialog id="modal-baja-proveedor-{{ proveedor.pk }}" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
+      <div class="p-6">
+        <div class="flex items-start justify-between">
+          <h2 class="text-lg font-semibold text-gray-700">Dar de baja a {{ proveedor.razon_social }}</h2>
+          <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+        </div>
+        <p class="mt-4 text-sm text-gray-600">El proveedor quedará inactivo; no se borra ningún dato. Sus productos quedan protegidos por la FK.</p>
+        <form method="post" action="{% url 'proveedores:proveedor-baja' proveedor.pk %}" class="mt-6 flex gap-3">
+          {% csrf_token %}
+          <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
+          <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
+        </form>
+      </div>
+    </dialog>
+  {% endif %}
+{% endfor %}
+
+{% if is_paginated %}
+  <nav class="mt-4 flex gap-4 text-sm text-primary-700">
+    {% if page_obj.has_previous %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>
+    {% endif %}
+    <span class="text-gray-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Siguiente</a>
+    {% endif %}
+  </nav>
+{% endif %}

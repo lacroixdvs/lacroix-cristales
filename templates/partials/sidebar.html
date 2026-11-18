@@ -12,25 +12,24 @@
 
     {% if es_adm %}
       <li><a href="{% url 'usuarios:usuario-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Usuarios</a></li>
-      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Proveedores</a></li>
+      <li><a href="{% url 'proveedores:proveedor-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Proveedores</a></li>
     {% endif %}
 
     {% if es_adm or es_vendedor %}
-      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Ventas</a></li>
+      <li><a href="{% url 'ventas:venta-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Ventas</a></li>
     {% endif %}
 
     {% if es_adm or es_vendedor or es_usuario %}
-      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Catálogo</a></li>
+      <li><a href="{% url 'catalogo:producto-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Catálogo</a></li>
     {% endif %}
 
     {% if es_adm or es_vendedor %}
       <li><a href="{% url 'clientes:cliente-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Clientes</a></li>
     {% endif %}
 
-    {% if es_usuario %}
-      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Presupuesto</a></li>
+    {% if es_adm or es_vendedor or es_usuario %}
+      <li><a href="{% url 'catalogo:presupuesto' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Presupuesto</a></li>
     {% endif %}
   </ul>
 
-  <p class="mt-6 text-xs text-gray-400">Los módulos se habilitan en fases posteriores.</p>
 </aside>

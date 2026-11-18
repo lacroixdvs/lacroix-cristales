@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load ventas_tags %}
+
+{% block title %}Venta #{{ venta.pk }} — Vit Cristales{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl">
+  <div class="flex items-start justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">Venta #{{ venta.pk }}</p>
+      <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ venta.cliente.razon_social }}</h1>
+      <p class="mt-1 text-sm text-gray-500">Vendedor: {{ venta.vendedor.username }} · {{ venta.fecha|date:"d/m/Y H:i" }}</p>
+    </div>
+    <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ venta.estado|badge_estado }}">{{ venta.get_estado_display }}</span>
+  </div>
+
+  <section class="mt-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+    <h2 class="text-lg font-semibold text-gray-800">Ítems</h2>
+    <table class="mt-4 min-w-full text-sm">
+      <thead class="text-xs uppercase text-gray-500">
+        <tr>
+          <th class="py-2 text-left">Producto</th>
+          <th class="py-2 text-right">Cantidad</th>
+          <th class="py-2 text-right">Precio (snapshot)</th>
+          <th class="py-2 text-right">Subtotal</th>
+          {% if venta.estado == "BORRADOR" and venta.activo %}<th class="py-2 text-right">Acción</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for detalle in venta.detalles.all %}
+          {% if detalle.activo %}
+            <tr>
+              <td class="py-2 font-medium text-gray-900">{{ detalle.producto.codigo }} — {{ detalle.producto.nombre }}</td>
+              <td class="py-2 text-right">{{ detalle.cantidad }}</td>
+              <td class="py-2 text-right">${{ detalle.precio_unitario }}</td>
+              <td class="py-2 text-right">${{ detalle.subtotal }}</td>
+              {% if venta.estado == "BORRADOR" and venta.activo %}
+                <td class="py-2 text-right">
+                  <form method="post" action="{% url 'ventas:detalle-quitar' venta.pk detalle.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-600 hover:underline">Quitar</button>
+                  </form>
+                </td>
+              {% endif %}
+            </tr>
+          {% endif %}
+        {% empty %}
+          <tr><td colspan="5" class="py-4 text-gray-500">Sin ítems activos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if venta.estado == "BORRADOR" and venta.activo %}
+      <form method="post" action="{% url 'ventas:detalle-agregar' venta.pk %}" class="mt-6 flex flex-wrap items-end gap-3 border-t border-gray-100 pt-5">
+        {% csrf_token %}
+        <div class="flex-1">
+          <label for="producto_id" class="block text-sm font-medium text-gray-700">Producto</label>
+          <select id="producto_id" name="producto_id" required
+                  class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600">
+            {% for producto in productos_disponibles %}
+              <option value="{{ producto.pk }}">{{ producto.codigo }} — {{ producto.nombre }} (stock {{ producto.stock }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="w-32">
+          <label for="cantidad" class="block text-sm font-medium text-gray-700">Cantidad</label>
+          <input id="cantidad" type="number" name="cantidad" value="1" min="1" required
+                 class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600">
+        </div>
+        <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700">Agregar ítem</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="mt-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+    <h2 class="text-lg font-semibold text-gray-800">Resumen</h2>
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex justify-between"><dt class="text-gray-500">Subtotal</dt><dd>${{ resumen.subtotal }}</dd></div>
+      <div class="flex justify-between"><dt class="text-gray-500">Descuento mayorista ({{ resumen.descuento_porcentaje }}%)</dt><dd>-${{ resumen.descuento_importe }}</dd></div>
+      <div class="flex justify-between border-t border-gray-200 pt-2 text-base font-bold"><dt>Total</dt><dd>${{ resumen.total }}</dd></div>
+    </dl>
+    {% if venta.observaciones %}
+      <p class="mt-4 text-sm text-gray-600"><span class="font-medium">Observaciones:</span> {{ venta.observaciones }}</p>
+    {% endif %}
+  </section>
+
+  <div class="mt-6 flex flex-wrap gap-3">
+    {% if venta.estado == "BORRADOR" and venta.activo %}
+      <a href="{% url 'ventas:venta-update' venta.pk %}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Editar cabecera</a>
+      <form method="post" action="{% url 'ventas:venta-confirmar' venta.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700">Confirmar venta</button>
+      </form>
+    {% endif %}
+    {% if venta.activo %}
+      <button type="button" data-modal-open="modal-cancelar-venta" class="rounded-lg bg-yellow-600 px-4 py-2 text-sm text-white hover:bg-yellow-700">Cancelar venta</button>
+      {% if es_adm %}
+        <button type="button" data-modal-open="modal-baja-venta" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Dar de baja</button>
+      {% endif %}
+    {% endif %}
+    <a href="{% url 'ventas:venta-list' %}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Volver</a>
+  </div>
+</div>
+
+{% if venta.activo %}
+  <dialog id="modal-cancelar-venta" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
+    <div class="p-6">
+      <div class="flex items-start justify-between">
+        <h2 class="text-lg font-semibold text-gray-700">Cancelar la venta #{{ venta.pk }}</h2>
+        <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+      </div>
+      <p class="mt-4 text-sm text-gray-600">La venta pasará a CANCELADA y se reintegrará el stock si estaba confirmada. No se borra ningún dato.</p>
+      <form method="post" action="{% url 'ventas:venta-cancelar' venta.pk %}" class="mt-6 flex gap-3">
+        {% csrf_token %}
+        <button type="submit" class="rounded-lg bg-yellow-600 px-4 py-2 text-sm text-white hover:bg-yellow-700">Confirmar cancelación</button>
+        <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Volver</button>
+      </form>
+    </div>
+  </dialog>
+
+  {% if es_adm %}
+    <dialog id="modal-baja-venta" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
+      <div class="p-6">
+        <div class="flex items-start justify-between">
+          <h2 class="text-lg font-semibold text-gray-700">Dar de baja la venta #{{ venta.pk }}</h2>
+          <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+        </div>
+        <p class="mt-4 text-sm text-gray-600">La venta quedará inactiva y se reintegrará el stock si estaba confirmada. No se borra ningún dato.</p>
+        <form method="post" action="{% url 'ventas:venta-baja' venta.pk %}" class="mt-6 flex gap-3">
+          {% csrf_token %}
+          <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
+          <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
+        </form>
+      </div>
+    </dialog>
+  {% endif %}
+{% endif %}
+{% endblock %}

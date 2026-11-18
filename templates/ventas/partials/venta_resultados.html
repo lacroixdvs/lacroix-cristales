@@ -1,0 +1,86 @@
+{% load ventas_tags %}
+<div class="overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="text-xs uppercase text-gray-500">
+      <tr>
+        <th class="py-2 text-left">#</th>
+        <th class="py-2 text-left">Cliente</th>
+        <th class="py-2 text-left">Vendedor</th>
+        <th class="py-2 text-left">Fecha</th>
+        <th class="py-2 text-left">Estado</th>
+        <th class="py-2 text-right">Descuento</th>
+        <th class="py-2 text-right">Total</th>
+        <th class="py-2 text-left">Activo</th>
+        <th class="py-2 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for venta in ventas %}
+        <tr class="hover:bg-gray-50 cursor-pointer">
+          <td class="py-2 font-medium text-gray-900">
+            <a href="{% url 'ventas:venta-detail' venta.pk %}" class="text-primary-700 hover:underline">#{{ venta.pk }}</a>
+          </td>
+          <td class="py-2">{{ venta.cliente.razon_social }}</td>
+          <td class="py-2">{{ venta.vendedor.username }}</td>
+          <td class="py-2">{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+          <td class="py-2"><span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ venta.estado|badge_estado }}">{{ venta.get_estado_display }}</span></td>
+          <td class="py-2 text-right">{{ venta.descuento_mayorista }}%</td>
+          <td class="py-2 text-right font-medium text-gray-900">${{ venta.total }}</td>
+          <td class="py-2">
+            {% if venta.activo %}
+              <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Sí</span>
+            {% else %}
+              <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">No</span>
+            {% endif %}
+          </td>
+          <td class="py-2 text-right whitespace-nowrap">
+            {% if es_adm %}
+              {% if venta.activo %}
+                <button type="button" data-modal-open="modal-baja-venta-{{ venta.pk }}" class="text-red-600 hover:underline">Dar de baja</button>
+              {% else %}
+                <span class="text-gray-400">Inactiva</span>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9" class="py-4 text-gray-500">No hay ventas para mostrar.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if es_adm %}
+  {% for venta in ventas %}
+    {% if venta.activo %}
+      <dialog id="modal-baja-venta-{{ venta.pk }}" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
+        <div class="p-6">
+          <div class="flex items-start justify-between">
+            <h2 class="text-lg font-semibold text-gray-700">Dar de baja la venta #{{ venta.pk }}</h2>
+            <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+          </div>
+          <p class="mt-4 text-sm text-gray-600">
+            La venta quedará inactiva y se reintegrará el stock si estaba confirmada. No se borra ningún dato.
+          </p>
+          <form method="post" action="{% url 'ventas:venta-baja' venta.pk %}" class="mt-6 flex gap-3">
+            {% csrf_token %}
+            <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
+            <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
+          </form>
+        </div>
+      </dialog>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if is_paginated %}
+  <nav class="mt-4 flex gap-4 text-sm text-primary-700">
+    {% if page_obj.has_previous %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>
+    {% endif %}
+    <span class="text-gray-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Siguiente</a>
+    {% endif %}
+  </nav>
+{% endif %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ proveedor.razon_social }} — Vit Cristales{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+  <div class="flex items-start justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">Proveedor</p>
+      <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ proveedor.razon_social }}</h1>
+      <p class="mt-1 text-sm text-gray-500">CUIT {{ proveedor.cuit }}</p>
+    </div>
+    <span class="rounded-full px-2.5 py-0.5 text-xs font-medium
+      {% if proveedor.activo %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+      {% if proveedor.activo %}Activo{% else %}Inactivo{% endif %}
+    </span>
+  </div>
+
+  <dl class="mt-6 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+    <div><dt class="text-xs uppercase text-gray-500">Rubro</dt><dd class="mt-1 text-gray-900">{{ proveedor.rubro|default:"-" }}</dd></div>
+    <div><dt class="text-xs uppercase text-gray-500">Contacto</dt><dd class="mt-1 text-gray-900">{{ proveedor.contacto|default:"-" }}</dd></div>
+    <div><dt class="text-xs uppercase text-gray-500">Email</dt><dd class="mt-1 text-gray-900">{{ proveedor.email|default:"-" }}</dd></div>
+    <div class="sm:col-span-2"><dt class="text-xs uppercase text-gray-500">Dirección</dt><dd class="mt-1 text-gray-900">{{ proveedor.direccion|default:"-" }}</dd></div>
+  </dl>
+
+  <div class="mt-8 flex flex-wrap gap-3">
+    <a href="{% url 'proveedores:proveedor-update' proveedor.pk %}" class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700">Editar</a>
+    {% if proveedor.activo %}
+      <button type="button" data-modal-open="modal-baja-detalle" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Dar de baja</button>
+    {% else %}
+      <form method="post" action="{% url 'proveedores:proveedor-reactivar' proveedor.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700">Reactivar</button>
+      </form>
+    {% endif %}
+    <a href="{% url 'proveedores:proveedor-list' %}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Volver</a>
+  </div>
+</div>
+
+{% if proveedor.activo %}
+  <dialog id="modal-baja-detalle" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
+    <div class="p-6">
+      <div class="flex items-start justify-between">
+        <h2 class="text-lg font-semibold text-gray-700">Dar de baja a {{ proveedor.razon_social }}</h2>
+        <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+      </div>
+      <p class="mt-4 text-sm text-gray-600">El proveedor quedará inactivo; no se borra ningún dato.</p>
+      <form method="post" action="{% url 'proveedores:proveedor-baja' proveedor.pk %}" class="mt-6 flex gap-3">
+        {% csrf_token %}
+        <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
+        <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
+      </form>
+    </div>
+  </dialog>
+{% endif %}
+{% endblock %}

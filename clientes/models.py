@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 
-from .validators import CUIT_FORMATO, MENSAJE_CUIT, normalizar_cuit
+from core.validators import CUIT_FORMATO, MENSAJE_CUIT, normalizar_cuit
 
 
 class Cliente(models.Model):

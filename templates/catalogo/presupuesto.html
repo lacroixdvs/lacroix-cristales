@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Presupuesto — Vit Cristales{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Presupuesto</h1>
+    <p class="mt-1 text-sm text-gray-500">Selección temporal en sesión. No descuenta stock ni genera ventas.</p>
+  </div>
+  {% if items %}
+    <form method="post" action="{% url 'catalogo:presupuesto' %}">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="vaciar">
+      <button type="submit" class="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Vaciar presupuesto</button>
+    </form>
+  {% endif %}
+</div>
+
+<section class="mt-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+  <table class="min-w-full text-sm">
+    <thead class="text-xs uppercase text-gray-500">
+      <tr>
+        <th class="py-2 text-left">Producto</th>
+        <th class="py-2 text-right">Precio</th>
+        <th class="py-2 text-right">Cantidad</th>
+        <th class="py-2 text-right">Subtotal</th>
+        <th class="py-2 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for fila in items %}
+        <tr>
+          <td class="py-2 font-medium text-gray-900">{{ fila.producto.nombre }}</td>
+          <td class="py-2 text-right">${{ fila.precio_unitario }}</td>
+          <td class="py-2 text-right">
+            <form method="post" action="{% url 'catalogo:presupuesto' %}" class="inline-flex items-center gap-2">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="cambiar">
+              <input type="hidden" name="producto_id" value="{{ fila.producto.pk }}">
+              <input type="number" name="cantidad" min="1" value="{{ fila.cantidad }}"
+                     class="w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm">
+              <button type="submit" class="text-primary-700 hover:underline">Actualizar</button>
+            </form>
+          </td>
+          <td class="py-2 text-right">${{ fila.subtotal }}</td>
+          <td class="py-2 text-right">
+            <form method="post" action="{% url 'catalogo:presupuesto' %}" class="inline">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="quitar">
+              <input type="hidden" name="producto_id" value="{{ fila.producto.pk }}">
+              <button type="submit" class="text-red-600 hover:underline">Quitar</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="py-4 text-gray-500">Todavía no agregaste productos. <a href="{% url 'catalogo:producto-list' %}" class="text-primary-700 hover:underline">Ir al catálogo</a>.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot class="border-t border-gray-200 text-sm">
+      <tr>
+        <td colspan="3" class="py-3 text-right font-medium text-gray-700">Total estimado ({{ cantidad_total }} unidades)</td>
+        <td class="py-3 text-right font-bold text-gray-900">${{ total }}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
+{% endblock %}

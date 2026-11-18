@@ -1,0 +1,97 @@
+{% load catalogo_tags %}
+<div class="overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="text-xs uppercase text-gray-500">
+      <tr>
+        <th class="py-2 text-left">Código</th>
+        <th class="py-2 text-left">Producto</th>
+        <th class="py-2 text-left">Categoría</th>
+        <th class="py-2 text-left">Espesor</th>
+        <th class="py-2 text-right">Precio</th>
+        <th class="py-2 text-right">Stock</th>
+        <th class="py-2 text-left">Estado</th>
+        <th class="py-2 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for producto in productos %}
+        <tr class="hover:bg-gray-50 cursor-pointer">
+          <td class="py-2 font-medium text-gray-900">{{ producto.codigo }}</td>
+          <td class="py-2">
+            <a href="{% url 'catalogo:producto-detail' producto.pk %}" class="text-primary-700 hover:underline">{{ producto.nombre }}</a>
+          </td>
+          <td class="py-2">
+            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ producto.categoria|badge_categoria }}">{{ producto.get_categoria_display }}</span>
+          </td>
+          <td class="py-2">{{ producto.espesor|default:"-" }}</td>
+          <td class="py-2 text-right">${{ producto.precio_unitario }}</td>
+          <td class="py-2 text-right">{{ producto.stock }}</td>
+          <td class="py-2">
+            {% if producto.activo %}
+              <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Activo</span>
+            {% else %}
+              <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="py-2 text-right whitespace-nowrap">
+            {% if es_adm %}
+              <a href="{% url 'catalogo:producto-update' producto.pk %}" class="text-primary-700 hover:underline">Editar</a>
+              {% if producto.activo %}
+                <button type="button" data-modal-open="modal-baja-producto-{{ producto.pk }}" class="ml-3 text-red-600 hover:underline">Dar de baja</button>
+              {% else %}
+                <form method="post" action="{% url 'catalogo:producto-reactivar' producto.pk %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="ml-3 text-primary-700 hover:underline">Reactivar</button>
+                </form>
+              {% endif %}
+            {% endif %}
+            {% if producto.activo %}
+              <form method="post" action="{% url 'catalogo:presupuesto' %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="agregar">
+                <input type="hidden" name="producto_id" value="{{ producto.pk }}">
+                <input type="hidden" name="cantidad" value="1">
+                <button type="submit" class="ml-3 text-primary-700 hover:underline">Agregar</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" class="py-4 text-gray-500">No hay productos para mostrar.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if es_adm %}
+  {% for producto in productos %}
+    {% if producto.activo %}
+      <dialog id="modal-baja-producto-{{ producto.pk }}" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
+        <div class="p-6">
+          <div class="flex items-start justify-between">
+            <h2 class="text-lg font-semibold text-gray-700">Dar de baja a {{ producto.nombre }}</h2>
+            <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+          </div>
+          <p class="mt-4 text-sm text-gray-600">El producto dejará de estar disponible; no se borra ningún dato ni se descuenta stock.</p>
+          <form method="post" action="{% url 'catalogo:producto-baja' producto.pk %}" class="mt-6 flex gap-3">
+            {% csrf_token %}
+            <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
+            <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
+          </form>
+        </div>
+      </dialog>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if is_paginated %}
+  <nav class="mt-4 flex gap-4 text-sm text-primary-700">
+    {% if page_obj.has_previous %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>
+    {% endif %}
+    <span class="text-gray-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Siguiente</a>
+    {% endif %}
+  </nav>
+{% endif %}

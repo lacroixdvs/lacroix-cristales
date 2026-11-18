@@ -6,11 +6,11 @@
 ## Estado actual
 
 - **Fecha:** 2026-11-18
-- **Fase:** 5 de 9 — App clientes, patrón vertical de referencia (completada)
+- **Fase:** 6 de 9 — Apps de dominio restantes (proveedores, catálogo y ventas), completada
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
-- **Código generado:** `manage.py`, `config/`, `core`, `usuarios` completo y app `clientes` completa (modelo, forms, vistas, templates, admin, tests). Aún no hay proveedores, catálogo ni ventas.
-- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` actualizado y 44 tests (25 de `clientes` + 19 previos) **OK** con settings de testing.
+- **Código generado:** `manage.py`, `config/`, `core`, `usuarios`, `clientes`, `proveedores`, `catalogo` y `ventas`, todos con modelo, forms, vistas, templates, admin, migración y tests. Falta la API REST (Fase 7).
+- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` actualizado y 102 tests (58 nuevos de Fase 6 + 44 previos) **OK** con settings de testing.
 
 ## Stack definido
 
@@ -80,6 +80,20 @@
 - `cargar_roles` se volvió a ejecutar y asignó los permisos ya existentes de `clientes`: ADM 8, VENDEDOR 1 (`view_cliente`), USUARIO 0 (sigue esperando `catalogo.Producto`).
 - `email` de `Cliente` es opcional (`blank=True`); no se declaró único porque no fue parte de los requisitos.
 
+## Registro técnico de la Fase 6
+
+- El validador de CUIT se movió a `core/validators.py`. `clientes/validators.py` quedó como re-export para no romper importaciones existentes, y `Cliente` importa directamente desde `core`. El mixin de estilos Tailwind también se centralizó en `core/forms.py` (`EstiloTailwindMixin`).
+- `Proveedor` reutiliza el mismo CUIT normalizado que `Cliente` y agrega `rubro` opcional. Su CRUD es **solo ADM**; el filtro `activo` y el live search funcionan como en `clientes` (razón social/CUIT/email/rubro).
+- `Producto.categoria` usa `TextChoices` (`VIDRIO`, `MAMPARA`, `ESPEJO`, `CERRAMIENTO`). `precio_unitario` tiene `MinValueValidator(0.01)` en el modelo y `clean_precio_unitario()` en el form. `proveedor` es FK con `PROTECT`, por lo que dar de baja un proveedor nunca borra sus productos (la baja es lógica).
+- En `catalogo`, ADM hace CRUD; VENDEDOR y USUARIO leen y buscan. El filtro de estado se ignora en backend para no-ADM (igual que en `clientes`). El detalle de productos inactivos tampoco es accesible para ellos.
+- `catalogo/presupuesto.py` guarda `{producto_id: cantidad}` en `request.session` bajo la clave `presupuesto`. `resumen()` recalcula importes con los precios **vigentes** del catálogo y solo considera productos activos; no toca stock ni crea `Venta`. Se expone en `/catalogo/presupuesto/` y `/presupuesto/` redirige a esa ruta (para no duplicar el namespace `catalogo`).
+- `DetalleVenta.precio_unitario` es un **snapshot**: se copia de `Producto` al agregar el ítem y `DetalleVenta.save()` calcula `subtotal`. Los servicios usan `Decimal(...)` de forma explícita porque los valores pueden llegar como strings desde helpers/forms.
+- `Venta` persiste `subtotal`, `descuento_mayorista` y `total`. `recalcular_totales()` suma detalles activos, aplica el porcentaje del cliente y redondea a 2 decimales con `ROUND_HALF_UP`. `resumen()` devuelve el descuento en importe y porcentaje para mostrarlo explícitamente.
+- `confirmar_venta()` valida todo antes de escribir: borrador, ítems activos, productos activos y `stock >= cantidad`. Recién después descuenta y cambia el estado. Todo dentro de `transaction.atomic()` con `select_for_update()` sobre la venta y los productos, por lo que un `ValidationError` revierte la transacción completa y no quedan descuentos parciales.
+- `cancelar_venta()` reintegra stock solo si la venta estaba `CONFIRMADA`; es idempotente para ventas ya canceladas. `dar_de_baja()` reutiliza esa cancelación y además marca `activo=False`; solo ADM puede invocarla.
+- VENDEDOR opera únicamente sobre **sus propios borradores**: no ve detalles de otras ventas, no edita confirmadas y no da de bajas. ADM ve y opera todo. USUARIO no accede a `ventas`.
+- `PERMISOS_POR_ROL` de `cargar_roles` ya contenía los permisos de Fase 6; alcanzó con volver a ejecutarlo tras migrar: ADM 24, VENDEDOR 8, USUARIO 1 (`view_producto`).
+
 ## Decisiones heredadas de `inicio.md`
 
 - GitFlow simplificado, PRs chicos y enfocados, commits semánticos. **La IA nunca ejecuta Git: solo sugiere comandos.**
@@ -94,13 +108,13 @@
 
 ## Pendientes
 
-- **Fase 6:** apps `proveedores`, `catalogo` y `ventas`; cálculo de totales y control de stock.
+- **Fase 6:** completada (proveedores, catálogo, presupuesto en sesión, ventas con totales y control de stock). Verificado con `check`, `migrate`, `cargar_roles` y 102 tests OK.
 - **Fase 7:** API, Swagger en `/api/schema/swagger/` y JWT.
 - **Fases 8-9:** Docker/Render, README final y cierre de bitácora.
 
 ## Riesgos y recordatorios
 
-- `migrate` **ya se ejecutó en desarrollo** (Fases 4 y 5). Toda nueva app de dominio requerirá su propia migración antes de usarla.
+- `migrate` **ya se ejecutó en desarrollo** (Fases 4, 5 y 6, con `proveedores.0001_initial`, `catalogo.0001_initial` y `ventas.0001_initial`). Toda nueva app de dominio requerirá su propia migración antes de usarla.
 - Después de crear cada app de dominio conviene volver a correr `cargar_roles`: el comando es idempotente y completa los permisos de los grupos con los modelos nuevos.
 - Si se crea un administrador con `cargar_roles --crear-admin`, la contraseña debe pasarse por variable de entorno `ADMIN_PASSWORD` en entornos compartidos para no dejar secretos en el historial de comandos.
 - El cambio de estado de la venta y el movimiento de stock deben ocurrir en la misma transacción.

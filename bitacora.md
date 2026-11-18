@@ -148,3 +148,38 @@
 **Siguiente**
 
 - Fase 6: apps `proveedores`, `catalogo` y `ventas`, con cálculo de totales y control de stock.
+
+## 2026-11-18 — Fase 6: dominio de proveedores, catálogo y ventas
+
+**Qué se hizo**
+
+- Se extrajo el validador de CUIT a `core/validators.py`; `clientes/validators.py` quedó como re-export por compatibilidad. Se agregó `core/forms.py` con `EstiloTailwindMixin` para no triplicar clases Tailwind.
+- App `proveedores`: modelo `Proveedor` con CUIT único normalizado, `rubro` opcional y baja lógica. CRUD completo solo para ADM, con live search (razón social/CUIT/email/rubro), filtro de estado, paginación de 20, detalle, alta, edición, baja y reactivación con `<dialog>` y mensajes.
+- App `catalogo`: modelo `Producto` con `codigo` único, `categoria` (`VIDRIO`/`MAMPARA`/`ESPEJO`/`CERRAMIENTO`), `precio_unitario` > 0, `stock`, FK protegida a `Proveedor` y baja lógica. ADM hace CRUD; VENDEDOR y USUARIO solo leen, buscan (código/nombre/categoría) y pueden agregar al presupuesto. El filtro de estado se ignora en backend para roles no-ADM.
+- Presupuesto en `request.session` (`catalogo/presupuesto.py`): agregar, cambiar cantidades, quitar y vaciar; calcula subtotal/total con precios vigentes del catálogo sin descuentar stock ni crear ventas. Ruta canónica `/catalogo/presupuesto/` más alias `/presupuesto/` por `design.md`.
+- App `ventas`: `Venta` (cliente, vendedor, estado `BORRADOR`/`CONFIRMADA`/`CANCELADA`, `subtotal`, `descuento_mayorista`, `total`, baja lógica) y `DetalleVenta` (FK protegida a `Producto`, `cantidad >= 1`, `precio_unitario` snapshot, `subtotal`, baja lógica).
+- Capa de servicio `ventas/services.py`: `agregar_detalle`/`quitar_detalle` guardan el precio histórico y recalculan totales; `confirmar_venta`, `cancelar_venta` y `dar_de_baja` usan `transaction.atomic()` con `select_for_update()` sobre venta y productos. La validación previa (ítems activos, productos activos, stock suficiente) ocurre antes de escribir, por lo que un rechazo no deja descuentos parciales. El descuento mayorista del cliente se persiste y se muestra explícitamente en el resumen.
+- Permisos: ADM accede a todo y es el único que da de baja ventas confirmadas; VENDEDOR crea borradores, carga/quita ítems, confirma y consulta solo sus ventas; USUARIO no entra a `ventas`.
+- Sidebar y dashboard: enlaces reales de Proveedores, Catálogo, Ventas y Presupuesto; `MODULOS_POR_ROL` ya los contemplaba.
+- Templates con Tailwind y paleta de `design.md`: badges de categoría y estado, tablas con parciales para live search, modales nativos de baja/cancelación y formularios de carga de ítems.
+
+**Archivos tocados**
+
+- Creados: `core/{validators,forms}.py`; `proveedores/{__init__,apps,models,forms,views,urls,admin}.py`, `proveedores/migrations/0001_initial.py`, `proveedores/tests/{__init__,test_validaciones,test_permisos,test_crud}.py`; `catalogo/{__init__,apps,models,forms,presupuesto,views,urls,admin}.py`, `catalogo/migrations/0001_initial.py`, `catalogo/templatetags/{__init__,catalogo_tags}.py`, `catalogo/tests/{__init__,test_modelo,test_permisos,test_listado,test_crud,test_presupuesto}.py`; `ventas/{__init__,apps,models,forms,services,views,urls,admin}.py`, `ventas/migrations/0001_initial.py`, `ventas/templatetags/{__init__,ventas_tags}.py`, `ventas/tests/{__init__,test_totales,test_stock,test_permisos}.py`.
+- Creados (templates): `templates/proveedores/`, `templates/catalogo/` y `templates/ventas/` con sus listados, formularios, detalles y parciales.
+- Modificados: `clientes/validators.py`, `clientes/models.py`, `config/settings/base.py`, `config/urls.py`, `templates/partials/sidebar.html`, `bitacora.md`, `memoria.md`, `proyecto.md`.
+- Eliminado: `catalogo/presupuesto_urls.py` (ruta unificada para evitar namespaces duplicados).
+
+**Verificaciones**
+
+- `python manage.py check`: **ejecutado, sin problemas**.
+- `python manage.py makemigrations proveedores catalogo ventas`: **ejecutado**, generó los tres `0001_initial.py`.
+- `python manage.py migrate`: **ejecutado en desarrollo** (aplicó `proveedores.0001_initial`, `catalogo.0001_initial` y `ventas.0001_initial`).
+- `python manage.py cargar_roles`: **ejecutado**: ADM 24 permisos, VENDEDOR 8, USUARIO 1 (`view_producto`).
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **ejecutado**, 102 tests (44 previos + 58 nuevos), **OK**.
+- `python manage.py makemigrations --check --dry-run`: **sin cambios detectados**.
+- Git: **ningún comando ejecutado**.
+
+**Siguiente**
+
+- Fase 7: API REST con DRF, SimpleJWT y Swagger.
