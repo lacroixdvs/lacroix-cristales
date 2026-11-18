@@ -6,11 +6,11 @@
 ## Estado actual
 
 - **Fecha:** 2026-11-18
-- **Fase:** 1 de 9 — Contexto y cimentación (completada)
+- **Fase:** 2 de 9 — Configuración base de Django (completada)
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
-- **Código generado:** todavía no. La Fase 1 crea solo archivos de contexto y configuración de repositorio.
-- **Verificación:** pendiente. No hay proyecto Django ejecutable hasta la Fase 2.
+- **Código generado:** `manage.py`, paquete `config/` con settings separados y app mínima `usuarios` con su migración inicial. Aún no hay vistas, modelos de dominio ni templates.
+- **Verificación:** `python manage.py check` ejecutado sin problemas. Tests pendientes (se agregan con los CRUDs).
 
 ## Stack definido
 
@@ -37,6 +37,16 @@
 7. **Unicidad y soft delete:** `unique=True` en `CUIT` de `Proveedor` y `Cliente`, y en `código` de `Producto`. Todos los modelos incluyen `activo = models.BooleanField(default=True)`.
 8. **Marca:** carpeta `lacroix-cristales`, nombre comercial "Vit Cristales" en documentación e interfaz.
 
+## Registro técnico de la Fase 2
+
+- Dependencias instaladas en `.venv` con Python 3.12.5: **Django 5.2.19**, DRF 3.18.3, SimpleJWT 5.5.1, django-filter 25.2, drf-spectacular 0.30.0, dj-database-url 2.3.0, psycopg 3.3.9, whitenoise 6.12.0 y gunicorn 23.0.0.
+- `AUTH_USER_MODEL = "usuarios.Usuario"` quedó definido en `config/settings/base.py` **antes** de generar cualquier migración.
+- `manage.py`, `wsgi.py` y `asgi.py` cargan `.env` y toman el ambiente de `DJANGO_SETTINGS_MODULE` (default: `config.settings.development`). No se hardcodeó la selección de settings fuera de ese default.
+- `.env` local creado desde `.env.example` con una `SECRET_KEY` aleatoria de desarrollo; el valor no se mostró en logs y no está versionado.
+- Migración `usuarios/migrations/0001_initial.py` generada con `makemigrations usuarios`. **No se ejecutó `migrate`**: `db.sqlite3` existe pero está vacío (sin tablas), creado al consultar el historial de migraciones.
+- En `production.py` se definieron cabeceras de seguridad (`SECURE_SSL_REDIRECT`, cookies seguras, HSTS y `SECURE_PROXY_SSL_HEADER`) y WhiteNoise. Esto es nuevo, no modifica un archivo previo, pero queda registrado por la regla de no tocar seguridad sin advertir.
+- El storage S3/Supabase sigue pendiente para Fase 8; en `base.py` queda `FileSystemStorage` por defecto.
+
 ## Decisiones heredadas de `inicio.md`
 
 - GitFlow simplificado, PRs chicos y enfocados, commits semánticos. **La IA nunca ejecuta Git: solo sugiere comandos.**
@@ -51,16 +61,15 @@
 
 ## Pendientes
 
-- **Fase 2:** crear `manage.py` y el paquete `config/` con settings separados. Definir `AUTH_USER_MODEL = "usuarios.Usuario"` antes de la primera migración.
 - **Fase 3:** app `core`, templates base, Tailwind CDN y parciales.
-- **Fase 4:** app `usuarios`, grupos, formulario de registro y señales de rol/`is_active`.
+- **Fase 4:** completar `usuarios` con grupos, formulario de registro y señales de rol/`is_active` (el modelo y la migración inicial ya existen).
 - **Fases 5-6:** CRUDs con baja lógica, cálculo de totales y control de stock.
 - **Fase 7:** API, Swagger en `/api/schema/swagger/` y JWT.
 - **Fases 8-9:** Docker/Render, README final y cierre de bitácora.
 
 ## Riesgos y recordatorios
 
-- No correr `migrate` hasta que exista la app `usuarios` y `AUTH_USER_MODEL` esté configurado.
+- Ya existe la app `usuarios` y `AUTH_USER_MODEL` está configurado, pero **`migrate` todavía no se corrió**; se ejecutará cuando se completen las apps de dominio (Fase 5-6) o cuando se necesite probar auth.
 - El cambio de estado de la venta y el movimiento de stock deben ocurrir en la misma transacción.
 - No instalar dependencias nuevas sin justificar y consultar. Las de storage S3 se evalúan recién en Fase 8.
 - No tocar `.env`, CORS, CSRF, `ALLOWED_HOSTS` ni settings de seguridad sin advertirlo antes.

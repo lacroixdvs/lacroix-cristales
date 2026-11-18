@@ -62,9 +62,9 @@ lacroix-cristales/
 
 | App | Responsabilidad | Estado |
 |---|---|---|
-| `config` | Configuración por ambiente, URLs raíz, WSGI/ASGI | Planificada (Fase 2) |
+| `config` | Configuración por ambiente, URLs raíz, WSGI/ASGI | Creada en Fase 2 (check OK) |
 | `core` | Home, dashboard según rol, templates base y parciales | Planificada (Fase 3) |
-| `usuarios` | `Usuario` custom, grupos `ADM`/`VENDEDOR`/`USUARIO`, registro y señales | Planificada (Fase 4) |
+| `usuarios` | `Usuario` custom, grupos `ADM`/`VENDEDOR`/`USUARIO`, registro y señales | Modelo y `0001_initial.py` creados en Fase 2; registro/señales en Fase 4 |
 | `proveedores` | CRUD de proveedores con baja lógica | Planificada (Fase 6) |
 | `clientes` | CRUD de clientes mayoristas con baja lógica | Planificada (Fase 5) |
 | `catalogo` | CRUD de artículos con baja lógica | Planificada (Fase 6) |
