@@ -6,11 +6,11 @@
 ## Estado actual
 
 - **Fecha:** 2026-11-18
-- **Fase:** 7 de 9 — API REST con DRF, JWT y Swagger/OpenAPI, completada
+- **Fase:** 8 de 9 — Empaquetado Docker, configuración de producción y Render, completada
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
-- **Código generado:** `manage.py`, `config/`, `core`, `usuarios`, `clientes`, `proveedores`, `catalogo`, `ventas` y `api`, todos con modelo/serializers, vistas, templates, admin, migración y tests. Falta el despliegue (Fase 8).
-- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` actualizado, esquema OpenAPI validado sin errores ni warnings y 156 tests (54 nuevos de API + 102 previos) **OK** con settings de testing.
+- **Código generado:** `manage.py`, `config/`, `core`, `usuarios`, `clientes`, `proveedores`, `catalogo`, `ventas`, `api` y artefactos de deploy (`Dockerfile`, `docker-compose.yml`, `render.yaml`, `entrypoint.sh`, `.dockerignore`). Falta el cierre documental (Fase 9).
+- **Verificación:** `python manage.py check` (dev y production) sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` actualizado, esquema OpenAPI validado sin errores ni warnings y 156 tests **OK** con settings de testing. Docker no está disponible localmente: imagen y compose sin validación de runtime.
 
 ## Stack definido
 
@@ -23,7 +23,7 @@
 | Base de datos | SQLite en desarrollo; PostgreSQL en producción |
 | Archivos | `FileSystemStorage` en dev; storage S3-compatible en prod (condicional por entorno) |
 | Estáticos / servidor | WhiteNoise + Gunicorn |
-| Deploy | Docker (multi-stage) + Render + Supabase (a configurar en Fase 8) |
+| Deploy | Docker (multi-stage) + Render Blueprint + Supabase S3 opcional (configurado en Fase 8) |
 | Tests | `python manage.py test` (sin pytest) |
 
 ## Decisiones confirmadas (2026-11-18)
@@ -120,11 +120,24 @@
 - Migraciones: una por cambio lógico, con nombre descriptivo.
 - Los archivos `.md` de contexto se actualizan al cerrar cada hito.
 
+## Registro técnico de la Fase 8
+
+- `production.py` ya no exige `DATABASE_URL`: si falta, cae al SQLite de `base.py` para poder levantar el contenedor local y correr healthchecks. Con `DATABASE_URL`, `dj_database_url.parse()` recibe `conn_max_age=600` y `conn_health_checks=True` (recomendado en Render porque la BD puede reiniciarse).
+- Render inyecta `RENDER_EXTERNAL_HOSTNAME`. El settings lo agrega a `ALLOWED_HOSTS` junto con `.onrender.com` (comodín de subdominio de Django) y deriva `https://*.onrender.com` en `CSRF_TRUSTED_ORIGINS`, que Django soporta desde 4.0. Si no hay hosts configurados, quedan `localhost` y `127.0.0.1` como fallback.
+- Las cabeceras de seguridad son estrictas por defecto (`SECURE_SSL_REDIRECT=True`, cookies seguras, HSTS 1 año) pero se pueden desactivar una por una por entorno. En `docker-compose.yml` se desactivan explícitamente para probar por HTTP; en `render.yaml` quedan activas y se confía en `SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")` porque Render termina TLS en el proxy.
+- WhiteNoise se inserta en posición 1 del middleware (después de `SecurityMiddleware`) y se usa `CompressedManifestStaticFilesStorage`. Si `collectstatic` falla por un estático referenciado inexistente, `STATICFILES_STORAGE_BACKEND` permite bajar a `CompressedStaticFilesStorage` sin tocar código.
+- El storage S3 solo se activa con `USE_SUPABASE_STORAGE=True` **y** `SUPABASE_S3_ACCESS_KEY`, `SECRET_KEY`, `BUCKET` y `ENDPOINT` completos. El import de `storages.backends.s3` es diferido y lanza `ImproperlyConfigured` con un mensaje claro si faltan las librerías. `default_acl=None` evita problemas de ACL con Supabase; `SUPABASE_S3_PUBLIC_URL` permite fijar la URL pública del bucket para `MEDIA_URL`.
+- `entrypoint.sh` usa `set -eu`, corre migrate → cargar_roles → collectstatic y cierra con `exec gunicorn ...` para que el PID 1 sea Gunicorn y Render reciba las señales correctamente. Crea el admin inicial solo si `ADMIN_PASSWORD` está definido. Está escrito con LF y el Dockerfile además normaliza CRLF y aplica `chmod +x` por si el repo se clonó en Windows.
+- El Dockerfile separa builder/runtime: el venv se compila con compiladores y se copia a una runtime limpia, sin root (usuario `app`), con `curl` para el healthcheck. `docker-compose.yml` espera a que `pg_isready` pase antes de levantar el web y monta volúmenes persistentes para Postgres, estáticos y media.
+- `render.yaml` usa `generateValue: true` para `SECRET_KEY`, `fromDatabase` para `DATABASE_URL` y `sync: false` para contraseñas/credenciales S3: ningún secreto queda en el repo. No se instalaron `django-storages`/`boto3` en el `.venv` local porque el storage es condicional y no hace falta para los tests; sí están declarados en `requirements.txt` para el build de Docker/Render.
+- Docker no está instalado en el entorno de trabajo: no se pudo correr `docker build` ni `docker compose config`. Se validó sintaxis YAML con `yaml.safe_load`, finales LF del script y `check` de producción con entorno simulado.
+
 ## Pendientes
 
 - **Fase 6:** completada (proveedores, catálogo, presupuesto en sesión, ventas con totales y control de stock). Verificado con `check`, `migrate`, `cargar_roles` y 102 tests OK.
 - **Fase 7:** completada (ViewSets, routers, serializers 3 niveles, JWT, filtros, baja lógica, Swagger en `/api/schema/swagger/`). Verificado con `check`, `spectacular --validate` (0 errores/warnings) y 156 tests OK.
-- **Fases 8-9:** Docker/Render, README final y cierre de bitácora.
+- **Fase 8:** completada (Docker multi-stage, entrypoint, compose con Postgres 16, production.py hardened, render.yaml y .env.example). Verificado con `check` dev/production y 156 tests OK. Sin validación de runtime Docker por falta de Docker local.
+- **Fase 9:** README final, checklist del MVP y cierre de bitácora.
 
 ## Riesgos y recordatorios
 
@@ -132,6 +145,7 @@
 - Después de crear cada app de dominio conviene volver a correr `cargar_roles`: el comando es idempotente y completa los permisos de los grupos con los modelos nuevos.
 - Si se crea un administrador con `cargar_roles --crear-admin`, la contraseña debe pasarse por variable de entorno `ADMIN_PASSWORD` en entornos compartidos para no dejar secretos en el historial de comandos.
 - El cambio de estado de la venta y el movimiento de stock deben ocurrir en la misma transacción.
-- No instalar dependencias nuevas sin justificar y consultar. Las de storage S3 se evalúan recién en Fase 8.
-- No tocar `.env`, CORS, CSRF, `ALLOWED_HOSTS` ni settings de seguridad sin advertirlo antes.
+- No instalar dependencias nuevas sin justificar y consultar. En Fase 8 se agregaron `django-storages` y `boto3` a `requirements.txt` (aprobado para storage S3 condicional), pero no se instalaron en el `.venv` local.
+- No tocar `.env`, CORS, CSRF, `ALLOWED_HOSTS` ni settings de seguridad sin advertirlo antes. En Fase 8 se amplió `.env.example` y se hicieron configurables por entorno las cabeceras HTTPS de `production.py`, sin modificar base/development/testing.
+- Antes de desplegar: generar `SECRET_KEY`, cargar `ADMIN_PASSWORD` y las credenciales S3 en el panel de Render, y recordar que `render.yaml` apunta a la rama `develop`.
 - Los importes se manejan con `Decimal`, nunca con `float`.

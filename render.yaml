@@ -1,0 +1,72 @@
+# Blueprint de Render — Vit Cristales
+# Los secretos se generan o se completan en el panel; nunca van hardcodeados.
+databases:
+  - name: vitcristales-db
+    databaseName: vitcristales
+    user: vit
+    plan: free
+    ipAllowList: []
+
+services:
+  - type: web
+    name: vit-cristales
+    runtime: docker
+    plan: starter
+    region: oregon
+    branch: develop
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      # Render genera un valor seguro y lo guarda como secreto.
+      - key: SECRET_KEY
+        generateValue: true
+      # Conexión inyectada automáticamente desde la base del Blueprint.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vitcristales-db
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      # Render termina TLS en el proxy; HSTS y cookies seguras activas.
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      - key: SECURE_HSTS_ENABLED
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: PORT
+        value: "8000"
+      - key: WEB_CONCURRENCY
+        value: "2"
+      # El entrypoint crea el admin inicial solo si se completa esta clave.
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_EMAIL
+        value: admin@vitcristales.local
+      # Storage S3/Supabase: dejar False hasta cargar credenciales en el panel.
+      - key: USE_SUPABASE_STORAGE
+        value: "False"
+      - key: SUPABASE_S3_ACCESS_KEY
+        sync: false
+      - key: SUPABASE_S3_SECRET_KEY
+        sync: false
+      - key: SUPABASE_S3_BUCKET
+        sync: false
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: SUPABASE_S3_REGION
+        value: auto
+      - key: SUPABASE_S3_LOCATION
+        value: media
+      - key: SUPABASE_S3_PUBLIC_URL
+        sync: false

@@ -213,3 +213,32 @@
 **Siguiente**
 
 - Fase 8: despliegue (Docker/Render) y ajustes de producción.
+
+## 2026-11-18 — Fase 8: empaquetado Docker, producción y Render
+
+**Qué se hizo**
+
+- Se reescribió `config/settings/production.py`: `DATABASE_URL` vía `dj-database-url` con `conn_max_age=600` y `conn_health_checks=True`, fallback a SQLite para pruebas locales; WhiteNoise en el middleware y `CompressedManifestStaticFilesStorage` con override por entorno; `ALLOWED_HOSTS` y `CSRF_TRUSTED_ORIGINS` desde entorno con soporte automático para `RENDER_EXTERNAL_HOSTNAME`, `.onrender.com` y `https://*.onrender.com`; cabeceras HTTPS (`SECURE_SSL_REDIRECT`, cookies seguras, HSTS, `SECURE_PROXY_SSL_HEADER`, referrer policy) activables/desactivables por variable para no romper HTTP dentro de Docker; storage S3/Supabase **condicional** (solo con `USE_SUPABASE_STORAGE=True` y las cuatro credenciales completas).
+- Se creó `entrypoint.sh` con LF: ejecuta `migrate --noinput`, `cargar_roles` (con creación opcional de admin si hay `ADMIN_PASSWORD`), `collectstatic --noinput` y luego `exec gunicorn config.wsgi:application` respetando `PORT`, `WEB_CONCURRENCY` y `WEB_TIMEOUT`.
+- Se creó un `Dockerfile` multi-stage sobre `python:3.12-slim` (builder con venv en `/opt/venv`, runtime sin compiladores, usuario no-root `app`, normalización de CRLF y `chmod +x` del entrypoint, healthcheck con curl). Se agregaron `.dockerignore`, `docker-compose.yml` (web + PostgreSQL 16 con healthcheck y `depends_on: service_healthy`) y `render.yaml` (Blueprint con DB gratuita, web Docker, `SECRET_KEY` generado, `DATABASE_URL` inyectada, secretos `sync: false`).
+- Se amplió `.env.example` con todas las variables de producción/despliegue y se agregaron `django-storages>=1.14,<2.0` y `boto3>=1.34,<2.0` a `requirements.txt` (no instalados localmente porque el storage es condicional y no se necesita para verificar).
+
+**Archivos tocados**
+
+- Creados: `Dockerfile`, `.dockerignore`, `docker-compose.yml`, `render.yaml`, `entrypoint.sh`.
+- Modificados: `config/settings/production.py`, `requirements.txt`, `.env.example`, `bitacora.md`, `memoria.md`, `proyecto.md`.
+- No se tocó `.env` ni ninguna settings de seguridad de base/development/testing.
+
+**Verificaciones**
+
+- `python manage.py check`: **ejecutado, sin problemas**.
+- `python manage.py check --settings=config.settings.production` con `SECRET_KEY`, `DATABASE_URL` y `RENDER_EXTERNAL_HOSTNAME` de prueba: **ejecutado, sin problemas**. Se confirmó por `manage.py shell` que se agregan `.onrender.com` a `ALLOWED_HOSTS` y `https://*.onrender.com` a `CSRF_TRUSTED_ORIGINS`, que el fallback sin `DATABASE_URL` es SQLite y que el backend de estáticos es WhiteNoise Manifest.
+- `entrypoint.sh`: **25 LF y 0 CRLF** verificado a nivel de bytes; el Dockerfile además normaliza CRLF y aplica `chmod +x` en build.
+- `docker-compose.yml` y `render.yaml`: **parseados con `yaml.safe_load`, sintaxis válida**.
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **ejecutado**, 156 tests, **OK**.
+- **Docker no está disponible en este entorno**: no se pudo ejecutar `docker build` ni `docker compose config`. La imagen y el compose quedan listos pero sin validación de runtime local; se declara expresamente.
+- Git: **ningún comando ejecutado**.
+
+**Siguiente**
+
+- Fase 9: README final, cierre de bitácora y verificación integral del MVP.

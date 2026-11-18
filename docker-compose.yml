@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vitcristales}
+      POSTGRES_USER: ${POSTGRES_USER:-vit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definí POSTGRES_PASSWORD en .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vit} -d ${POSTGRES_DB:-vitcristales}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      SECRET_KEY: ${SECRET_KEY:?Definí SECRET_KEY en .env}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vit}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vitcristales}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8000}
+      # HTTP dentro de Docker: desactivamos las redirecciones HTTPS.
+      SECURE_SSL_REDIRECT: "False"
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+      SECURE_HSTS_ENABLED: "False"
+      PORT: "8000"
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-3}
+      WEB_TIMEOUT: ${WEB_TIMEOUT:-120}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@vitcristales.local}
+    volumes:
+      - staticfiles:/app/staticfiles
+      - media:/app/media
+
+volumes:
+  postgres_data:
+  staticfiles:
+  media:

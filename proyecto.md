@@ -53,7 +53,7 @@ lacroix-cristales/
 ├── docker-compose.yml
 ├── .dockerignore
 ├── render.yaml
-├── build.sh
+├── entrypoint.sh         # migrate → cargar_roles → collectstatic → gunicorn
 ├── README.md
 ├── memoria.md
 ├── bitacora.md
@@ -186,6 +186,16 @@ Los grupos de Django Auth son la fuente de verdad de permisos; el campo `rol` y 
 Acciones de ventas: `POST /api/ventas/<id>/confirmar/`, `POST /api/ventas/<id>/cancelar/`, `POST /api/ventas/<id>/detalles/agregar/`, `DELETE /api/ventas/<id>/detalles/<detalle_id>/`. Todas delegan en `ventas.services`.
 
 **Configuración API:** autenticación JWT (Bearer) + sesión para Swagger, `IsAuthenticated` global, paginación de 20, filtros `django-filter` / `search` / `ordering`, metadata OpenAPI "Vit Cristales API" v1.0.0.
+
+## Despliegue (Fase 8)
+
+- **`production.py`:** PostgreSQL por `DATABASE_URL` (`dj-database-url`, `conn_max_age=600`, health checks) con fallback SQLite local; WhiteNoise + `CompressedManifestStaticFilesStorage`; hosts y orígenes CSRF desde entorno con soporte automático para `RENDER_EXTERNAL_HOSTNAME`, `.onrender.com` y `https://*.onrender.com`; cabeceras HTTPS activables/desactivables por variable; storage S3/Supabase condicional (`USE_SUPABASE_STORAGE` + 4 credenciales).
+- **`Dockerfile`:** multi-stage sobre `python:3.12-slim`, venv en `/opt/venv`, usuario no-root `app`, healthcheck con curl y `ENTRYPOINT ["./entrypoint.sh"]`. El build normaliza CRLF y aplica `chmod +x` al script.
+- **`entrypoint.sh`:** `migrate --noinput` → `cargar_roles` (con admin opcional si hay `ADMIN_PASSWORD`) → `collectstatic --noinput` → `exec gunicorn config.wsgi:application` en `$PORT`.
+- **`docker-compose.yml`:** servicio `web` + PostgreSQL 16 con `pg_isready` healthcheck y `depends_on: service_healthy`; volúmenes persistentes para DB, estáticos y media; HTTPS desactivado para probar por HTTP local.
+- **`render.yaml`:** Blueprint con DB `free`, web Docker en rama `develop`, `SECRET_KEY` generado, `DATABASE_URL` inyectada desde la DB y credenciales S3/admin como `sync: false` (sin secretos en el repo).
+- **Dependencias nuevas (Fase 8):** `django-storages>=1.14,<2.0` y `boto3>=1.34,<2.0`, necesarias solo cuando se activa el storage S3.
+- **Estado de verificación:** `check` en dev y production OK, 156 tests OK, YAML parseado y `entrypoint.sh` con LF. Docker no está disponible localmente: imagen y compose sin probar en runtime.
 
 ## Convenciones
 

@@ -1,0 +1,39 @@
+# Control de versiones y secretos
+.git
+.gitignore
+.env
+.env.*.local
+
+# Entornos y cachés de Python
+.venv
+venv
+ENV
+env
+__pycache__
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Datos y artefactos generados
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+*.log
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+
+# Archivos de orquestación y documentación (no necesarios dentro de la imagen)
+Dockerfile
+docker-compose.yml
+.dockerignore
+render.yaml
+*.md
