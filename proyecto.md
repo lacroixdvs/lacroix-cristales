@@ -63,13 +63,22 @@ lacroix-cristales/
 | App | Responsabilidad | Estado |
 |---|---|---|
 | `config` | Configuración por ambiente, URLs raíz, WSGI/ASGI | Creada en Fase 2 (check OK) |
-| `core` | Home, dashboard según rol, templates base y parciales | Planificada (Fase 3) |
+| `core` | Home, dashboard según rol, tags de rol y tests de humo | Creada en Fase 3 (check OK, 4 tests) |
 | `usuarios` | `Usuario` custom, grupos `ADM`/`VENDEDOR`/`USUARIO`, registro y señales | Modelo y `0001_initial.py` creados en Fase 2; registro/señales en Fase 4 |
 | `proveedores` | CRUD de proveedores con baja lógica | Planificada (Fase 6) |
 | `clientes` | CRUD de clientes mayoristas con baja lógica | Planificada (Fase 5) |
 | `catalogo` | CRUD de artículos con baja lógica | Planificada (Fase 6) |
 | `ventas` | Ventas, detalles, totales y control de stock | Planificada (Fase 6) |
 | `api` | Routers, serializers Base/Get/Post, JWT y Swagger | Planificada (Fase 7) |
+
+## Capa de presentación (Fase 3)
+
+- `templates/base.html`: Tailwind CDN con paleta `primary` verde, bloques `title`/`content` e inclusión global de los parciales.
+- `templates/partials/`: `navbar.html`, `sidebar.html`, `messages.html` (estilos por nivel), `footer.html`, `modal-base.html` (`<dialog>`) y `live-search.html` (input + contenedor de resultados).
+- `static/js/live-search.js`: debounce de 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState` y event delegation.
+- `static/js/modales.js`: apertura por `data-modal-open`, cierre por `data-modal-close` y click en backdrop; Escape nativo.
+- `core/roles.py` resuelve el rol efectivo en backend; `core/templatetags/roles.py` solo lo muestra/condiciona en la UI.
+- Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`) y los enlaces de los módulos de dominio quedan previstos hasta Fase 4+.
 
 ## Modelos
 

@@ -1,0 +1,16 @@
+{% load roles %}
+<header class="border-b border-gray-100 bg-white shadow-sm">
+  <div class="mx-auto flex max-w-full items-center justify-between px-6 py-4">
+    <a href="{% url 'core:home' %}" class="text-lg font-bold text-primary-700">Vit Cristales</a>
+
+    <nav class="flex items-center gap-4 text-sm text-gray-600">
+      {% if request.user.is_authenticated %}
+        <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">{{ request.user|rol_actual }}</span>
+        <span class="font-medium text-gray-900">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <a href="/accounts/logout/" class="text-red-600 hover:underline">Cerrar sesión</a>
+      {% else %}
+        <a href="/accounts/login/" class="rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-700">Ingresar</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>

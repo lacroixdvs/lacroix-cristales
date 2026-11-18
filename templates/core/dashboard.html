@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load roles %}
+
+{% block title %}Dashboard — Vit Cristales{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+    <p class="mt-1 text-sm text-gray-500">
+      Perfil activo:
+      <span class="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700">{{ rol_etiqueta }}</span>
+    </p>
+  </div>
+</div>
+
+<section class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  {% for modulo in modulos %}
+    <article class="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-gray-900">{{ modulo }}</h2>
+      <p class="mt-1 text-xs text-gray-500">Módulo habilitado para tu perfil.</p>
+    </article>
+  {% empty %}
+    <p class="text-sm text-gray-500">No hay módulos habilitados para este perfil.</p>
+  {% endfor %}
+</section>
+
+{% if es_usuario %}
+<section class="mt-8 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+  <h2 class="text-lg font-semibold text-gray-700">Armar presupuesto</h2>
+  <p class="mt-1 text-xs text-gray-500">La selección de artículos se guarda en sesión (se completa en Fase 4).</p>
+  <div class="mt-4">{% include "partials/live-search.html" %}</div>
+</section>
+{% endif %}
+
+{% include "partials/modal-base.html" %}
+{% endblock %}

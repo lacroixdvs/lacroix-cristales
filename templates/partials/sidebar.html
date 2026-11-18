@@ -1,0 +1,36 @@
+{% load roles %}
+<aside class="w-64 shrink-0 border-r border-gray-100 bg-white p-4">
+  <p class="mb-3 text-xs font-semibold uppercase text-gray-500">Navegación</p>
+  {% es_rol request.user "ADM" as es_adm %}
+  {% es_rol request.user "VENDEDOR" as es_vendedor %}
+  {% es_rol request.user "USUARIO" as es_usuario %}
+
+  <ul class="space-y-1 text-sm">
+    <li>
+      <a href="{% url 'core:dashboard' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Dashboard</a>
+    </li>
+
+    {% if es_adm %}
+      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Usuarios</a></li>
+      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Proveedores</a></li>
+    {% endif %}
+
+    {% if es_adm or es_vendedor %}
+      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Ventas</a></li>
+    {% endif %}
+
+    {% if es_adm or es_vendedor or es_usuario %}
+      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Catálogo</a></li>
+    {% endif %}
+
+    {% if es_adm or es_vendedor %}
+      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Clientes</a></li>
+    {% endif %}
+
+    {% if es_usuario %}
+      <li><a href="#" aria-disabled="true" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Presupuesto</a></li>
+    {% endif %}
+  </ul>
+
+  <p class="mt-6 text-xs text-gray-400">Los módulos se habilitan en fases posteriores.</p>
+</aside>

@@ -59,3 +59,31 @@
 **Siguiente**
 
 - Fase 3: app `core`, templates base y parciales, Tailwind CDN y mensajes de feedback.
+
+## 2026-11-18 — Fase 3: core y UI base
+
+**Qué se hizo**
+
+- Creación de la app `core`, registrada en `INSTALLED_APPS`, con `HomeView` (pública) y `DashboardView` (con `LoginRequiredMixin`) que condiciona módulos y etiqueta según el rol efectivo.
+- Resolución del rol en backend mediante `core/roles.py`: los grupos de Django Auth son la fuente de verdad, con fallback al campo `rol` hasta que las señales de Fase 4 lo sincronicen. Etiqueta de prioridad ADM > VENDEDOR > USUARIO.
+- Tags de template `rol_actual` y `es_rol` en `core/templatetags/roles.py` para mostrar/condicionar la UI sin mover reglas a los templates.
+- Templates `base.html`, `home.html`, `core/dashboard.html` y parciales `navbar`, `sidebar`, `messages`, `footer`, `modal-base` y `live-search`, con Tailwind CDN y la paleta verde/grises definida en `design.md`.
+- Esqueletos reutilizables en `static/js`: `live-search.js` (debounce 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState` y event delegation) y `modales.js` (`<dialog>` nativo, cierre por X/backdrop y Escape del navegador).
+- Se agregó `STATICFILES_DIRS = [BASE_DIR / "static"]` en `base.py` y `include("core.urls")` en `config/urls.py`.
+- 4 tests de humo en `core/tests.py`: home 200, dashboard requiere login, módulos por rol y precedencia del grupo sobre el campo `rol`.
+
+**Archivos tocados**
+
+- Creados: `core/__init__.py`, `core/apps.py`, `core/roles.py`, `core/views.py`, `core/urls.py`, `core/tests.py`, `core/templatetags/{__init__,roles}.py`, `templates/base.html`, `templates/home.html`, `templates/core/dashboard.html`, `templates/partials/{navbar,sidebar,messages,footer,modal-base,live-search}.html`, `static/js/{live-search,modales}.js`.
+- Modificados: `config/settings/base.py`, `config/urls.py`, `bitacora.md`, `memoria.md`, `proyecto.md`.
+
+**Verificaciones**
+
+- `python manage.py check`: **ejecutado, sin problemas**.
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **ejecutado**, 4 tests, **OK** (base de test creada y destruida correctamente).
+- Migraciones: **no se corrieron nuevas** (`core` no tiene modelos). `migrate` sigue sin ejecutarse en desarrollo.
+- Git: **ningún comando ejecutado**.
+
+**Siguiente**
+
+- Fase 4: completar `usuarios` con registro público, login/logout, grupos `ADM`/`VENDEDOR`/`USUARIO` y señales de rol/`is_active`.

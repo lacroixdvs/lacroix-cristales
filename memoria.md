@@ -6,11 +6,11 @@
 ## Estado actual
 
 - **Fecha:** 2026-11-18
-- **Fase:** 2 de 9 — Configuración base de Django (completada)
+- **Fase:** 3 de 9 — Core y UI base (completada)
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
-- **Código generado:** `manage.py`, paquete `config/` con settings separados y app mínima `usuarios` con su migración inicial. Aún no hay vistas, modelos de dominio ni templates.
-- **Verificación:** `python manage.py check` ejecutado sin problemas. Tests pendientes (se agregan con los CRUDs).
+- **Código generado:** `manage.py`, `config/` con settings separados, app `usuarios` con su migración inicial y app `core` con home, dashboard por rol, templates base/parciales y esqueletos JS. Aún no hay modelos de dominio ni CRUDs.
+- **Verificación:** `python manage.py check` sin problemas y 4 tests de humo de `core` ejecutados con los settings de testing: **OK**.
 
 ## Stack definido
 
@@ -47,6 +47,17 @@
 - En `production.py` se definieron cabeceras de seguridad (`SECURE_SSL_REDIRECT`, cookies seguras, HSTS y `SECURE_PROXY_SSL_HEADER`) y WhiteNoise. Esto es nuevo, no modifica un archivo previo, pero queda registrado por la regla de no tocar seguridad sin advertir.
 - El storage S3/Supabase sigue pendiente para Fase 8; en `base.py` queda `FileSystemStorage` por defecto.
 
+## Registro técnico de la Fase 3
+
+- El rol efectivo se resuelve en `core/roles.py`: grupos de Django Auth como fuente de verdad con prioridad `ADM` > `VENDEDOR` > `USUARIO`, y fallback al campo `Usuario.rol` hasta que las señales de Fase 4 lo sincronicen.
+- `DashboardView` usa `LoginRequiredMixin` y entrega a la plantilla `rol`, `rol_etiqueta`, `modulos` y flags `es_adm`/`es_vendedor`/`es_usuario`. La lógica de qué módulo se muestra vive en `MODULOS_POR_ROL` (backend), no en el template.
+- Los tags `rol_actual` y `es_rol` solo presentan/condicionan la UI; no validan permisos.
+- Tailwind se carga por CDN con un `tailwind.config` inline que define la paleta `primary` (verde) de `design.md`. No hay build step.
+- `base.html` incluye los parciales `navbar`, `sidebar`, `messages` y `footer` de forma global. `messages.html` aplica clases por nivel del mensaje.
+- `static/js/live-search.js` y `static/js/modales.js` son esqueletos genéricos configurados por atributos `data-*`; aún no apuntan a endpoints reales de dominio (eso llega con los CRUDs).
+- `LOGIN_URL = "/accounts/login/"` y los enlaces de login/logout del navbar quedan como rutas previstas: se cablean recién en Fase 4.
+- Se agregó `STATICFILES_DIRS = [BASE_DIR / "static"]` para que `{% static %}` resuelva los JS.
+
 ## Decisiones heredadas de `inicio.md`
 
 - GitFlow simplificado, PRs chicos y enfocados, commits semánticos. **La IA nunca ejecuta Git: solo sugiere comandos.**
@@ -61,8 +72,7 @@
 
 ## Pendientes
 
-- **Fase 3:** app `core`, templates base, Tailwind CDN y parciales.
-- **Fase 4:** completar `usuarios` con grupos, formulario de registro y señales de rol/`is_active` (el modelo y la migración inicial ya existen).
+- **Fase 4:** completar `usuarios` con registro público, login/logout, grupos `ADM`/`VENDEDOR`/`USUARIO` y señales de rol/`is_active` (el modelo y la migración inicial ya existen).
 - **Fases 5-6:** CRUDs con baja lógica, cálculo de totales y control de stock.
 - **Fase 7:** API, Swagger en `/api/schema/swagger/` y JWT.
 - **Fases 8-9:** Docker/Render, README final y cierre de bitácora.
