@@ -5,6 +5,7 @@ Los ambientes importan este módulo y sobreescriben solo lo necesario.
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -23,12 +24,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Terceros: se configuran del todo en la Fase 7 (API).
+    # Terceros: API REST, filtros, JWT y esquema OpenAPI (Fase 7).
     "rest_framework",
     "django_filters",
     "drf_spectacular",
     # Apps propias
     "core",
+    "api",
     "usuarios",
     "proveedores",
     "clientes",
@@ -102,3 +104,40 @@ AUTH_USER_MODEL = "usuarios.Usuario"
 
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
+
+# API REST (Fase 7): JWT por defecto; SessionAuthentication permite navegar
+# Swagger con la sesión del MVT sin token manual.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Vit Cristales API",
+    "DESCRIPTION": (
+        "API REST de Vit Cristales: proveedores, clientes, catálogo, ventas y usuarios. "
+        "Autenticación con JWT (Bearer) o sesión para el Swagger UI."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+}

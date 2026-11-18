@@ -8,6 +8,7 @@
         {% es_rol request.user "ADM" as es_adm %}
         {% if es_adm %}
           <a href="{% url 'usuarios:usuario-list' %}" class="text-gray-700 hover:underline">Usuarios</a>
+          <a href="{% url 'api:swagger' %}" class="text-gray-700 hover:underline" target="_blank" rel="noopener">API / Swagger</a>
         {% endif %}
         <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">{{ request.user|rol_actual }}</span>
         <span class="font-medium text-gray-900">{{ request.user.get_full_name|default:request.user.username }}</span>

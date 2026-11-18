@@ -183,3 +183,33 @@
 **Siguiente**
 
 - Fase 7: API REST con DRF, SimpleJWT y Swagger.
+
+## 2026-11-18 — Fase 7: API REST, JWT y Swagger/OpenAPI
+
+**Qué se hizo**
+
+- Se configuró DRF en `config/settings/base.py`: autenticación JWT (Bearer) primero y `SessionAuthentication` después para navegar Swagger con la sesión del MVT; `IsAuthenticated` por defecto; `PageNumberPagination` de 20; `DjangoFilterBackend` + `SearchFilter` + `OrderingFilter`; `AutoSchema` de drf-spectacular. Se agregaron `SIMPLE_JWT` (access 60 min, refresh 1 día) y `SPECTACULAR_SETTINGS` con metadata de Vit Cristales. Se registró la app `api` en `INSTALLED_APPS`.
+- Se implementó el **patrón de 3 niveles** (`*BaseSerializer`, `*GetSerializer` con relaciones anidadas/legibles, `*PostSerializer` con validaciones de negocio) en los cinco `serializers.py` de dominio: `usuarios`, `proveedores`, `clientes`, `catalogo` y `ventas` (incluye `DetalleVenta`). Los Get exponen grupos/rol, conteos, proveedor anidado, etiqueta de categoría, detalles con snapshot de precio y resumen de descuento; los Post normalizan CUIT, validan descuento/precio/categoría/vendedor y delegan las reglas cruzadas a `ventas.services`.
+- Se crearon los ViewSets en `api/viewsets.py` y los routers en `api/urls.py` bajo `/api/`: `/api/usuarios/`, `/api/proveedores/`, `/api/clientes/`, `/api/catalogo/` y `/api/ventas/`, más acciones anidadas de ventas (`confirmar`, `cancelar`, `detalles/agregar`, `detalles/<id>`). La misma matriz de roles del MVT: ADM acceso total; VENDEDOR lectura de clientes/catálogo y gestión de sus propias ventas; USUARIO solo GET de productos activos. La baja lógica en `perform_destroy` setea `activo=False` (y `is_active=False` en usuarios) sin borrado físico; `VentaViewSet.perform_destroy` llama a `services.dar_de_baja()` para reintegrar stock.
+- Se cablearon los endpoints JWT (`/api/token/`, `/api/token/refresh/`), el esquema (`/api/schema/`) y Swagger UI (`/api/schema/swagger/`) en `config/urls.py`. Se agregó un enlace "API / Swagger" visible solo para ADM en el navbar.
+- `confirmar`, `cancelar`, agregar y quitar ítems invocan `ventas.services` sin duplicar la lógica de totales, descuento ni stock; las excepciones `ValidationError` de Django se traducen a respuestas 400 de DRF.
+- Se corrigió la generación del esquema para que no emitiera warnings: `swagger_fake_view` en `VentaViewSet.get_queryset`, `source` redundante removido y anotaciones `@extend_schema_field` en los campos calculados.
+
+**Archivos tocados**
+
+- Creados: `api/{__init__,apps,permissions,filters,viewsets,urls}.py`, `api/tests/{__init__,test_jwt,test_serializers,test_filtros,test_permisos,test_baja_logica,test_schema,test_ventas_acciones}.py`.
+- Creados (serializers): `usuarios/serializers.py`, `proveedores/serializers.py`, `clientes/serializers.py`, `catalogo/serializers.py`, `ventas/serializers.py`.
+- Modificados: `config/settings/base.py` (DRF/SimpleJWT/Spectacular + app `api`), `config/settings/testing.py` (SECRET_KEY largo para evitar warnings de JWT), `config/urls.py`, `templates/partials/navbar.html`, `bitacora.md`, `memoria.md`, `proyecto.md`.
+- Sin nuevas dependencias: DRF 3.18.3, SimpleJWT 5.5.1, django-filter 25.2 y drf-spectacular 0.30.0 ya estaban en `requirements.txt` e instalados.
+
+**Verificaciones**
+
+- `python manage.py check`: **ejecutado, sin problemas**.
+- `python manage.py makemigrations --check --dry-run`: **sin cambios detectados**.
+- `python manage.py spectacular --validate`: **ejecutado, 0 errores y 0 warnings**.
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **ejecutado**, 156 tests (102 previos + 54 nuevos de API), **OK**.
+- Git: **ningún comando ejecutado**.
+
+**Siguiente**
+
+- Fase 8: despliegue (Docker/Render) y ajustes de producción.

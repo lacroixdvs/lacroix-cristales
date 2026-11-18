@@ -6,11 +6,11 @@
 ## Estado actual
 
 - **Fecha:** 2026-11-18
-- **Fase:** 6 de 9 — Apps de dominio restantes (proveedores, catálogo y ventas), completada
+- **Fase:** 7 de 9 — API REST con DRF, JWT y Swagger/OpenAPI, completada
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
-- **Código generado:** `manage.py`, `config/`, `core`, `usuarios`, `clientes`, `proveedores`, `catalogo` y `ventas`, todos con modelo, forms, vistas, templates, admin, migración y tests. Falta la API REST (Fase 7).
-- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` actualizado y 102 tests (58 nuevos de Fase 6 + 44 previos) **OK** con settings de testing.
+- **Código generado:** `manage.py`, `config/`, `core`, `usuarios`, `clientes`, `proveedores`, `catalogo`, `ventas` y `api`, todos con modelo/serializers, vistas, templates, admin, migración y tests. Falta el despliegue (Fase 8).
+- **Verificación:** `python manage.py check` sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` actualizado, esquema OpenAPI validado sin errores ni warnings y 156 tests (54 nuevos de API + 102 previos) **OK** con settings de testing.
 
 ## Stack definido
 
@@ -94,6 +94,20 @@
 - VENDEDOR opera únicamente sobre **sus propios borradores**: no ve detalles de otras ventas, no edita confirmadas y no da de bajas. ADM ve y opera todo. USUARIO no accede a `ventas`.
 - `PERMISOS_POR_ROL` de `cargar_roles` ya contenía los permisos de Fase 6; alcanzó con volver a ejecutarlo tras migrar: ADM 24, VENDEDOR 8, USUARIO 1 (`view_producto`).
 
+## Registro técnico de la Fase 7
+
+- DRF usa JWT primero y sesión después. Eso hace que un request sin credenciales devuelva **401** (JWT entrega `WWW-Authenticate: Bearer`), mientras que los roles insuficientes con sesión válida devuelvan **403**. `IsAuthenticated` es el permiso global; cada ViewSet lo refine con permisos de rol propios basados en `core.roles.rol_de()`, no en permisos de modelo, para que API y MVT coincidan exactamente.
+- Los serializers viven en cada app de dominio (`usuarios`, `proveedores`, `clientes`, `catalogo`, `ventas`), nunca centralizados en `api`. `api/` solo tiene permisos, filtros, viewsets, routers y tests. Cada app respeta `<Modelo>BaseSerializer` → `<Modelo>GetSerializer` → `<Modelo>PostSerializer`.
+- Los `GetSerializer` enriquecen la lectura: grupos y etiqueta de rol (usuario), conteo de productos/proveedor y ventas/cliente, proveedor anidado y etiqueta de categoría (producto), y cliente/vendedor anidados + detalles con snapshot + resumen de descuento (venta).
+- Los `PostSerializer` de proveedor y cliente declaran `cuit` de forma explícita para **no heredar el `RegexValidator` del modelo** (que exige guiones). Así `normalizar_cuit()` puede aceptar 11 dígitos, validar formato y controlar unicidad en un solo lugar. `validate_cuit` excluye la propia instancia en updates.
+- `VentaViewSet.perform_create()` fuerza `vendedor=request.user` cuando el rol es VENDEDOR, ignorando un `vendedor` ajeno enviado en el payload. `VentaPermission` complementa el queryset: VENDEDOR solo ve sus ventas activas; la baja (DELETE) es ADM-only; las acciones que mutan requieren borrador propio, salvo `confirmar`, donde el servicio devuelve 400 si el estado no es `BORRADOR` (igual que el MVT).
+- Las acciones `confirmar`, `cancelar`, `agregar_item` y `quitar_item` delegan en `ventas.services`. `_ejecutar_servicio()` traduce `django.core.exceptions.ValidationError` a `rest_framework.exceptions.ValidationError` (400), de modo que no se duplica ninguna regla de stock/totales.
+- `perform_destroy()` jamás borra filas: setea `activo=False`. En `UsuarioViewSet` se persiste explícitamente `is_active=False` junto con `activo=False` porque `save(update_fields=[...])` no incluye el campo que calcula la señal `pre_save`. En ventas se llama a `services.dar_de_baja()` para reintegrar stock. Un admin no puede darse de baja a sí mismo (400).
+- Filtros `django-filter` por `activo` (booleano), `estado`, `categoria`, `proveedor`, `rubro`, `cliente`, `vendedor` y `rol`, más `search` y `ordering` de DRF. Para no-ADM los querysets de clientes, catálogo y ventas filtran por `activo=True` (y ventas además por vendedor), incluso si el query param pide inactivos.
+- El esquema se genera con `manage.py spectacular --validate`: **0 errores, 0 warnings**. Para lograrlo, `VentaViewSet.get_queryset()` contempla `swagger_fake_view`, se removió un `source` redundante en `categoria_etiqueta` y se anotaron todos los `SerializerMethodField` con `@extend_schema_field`. `SPECTACULAR_SETTINGS.SERVE_INCLUDE_SCHEMA=False` hace que Swagger UI fetchie `/api/schema/`.
+- No se agregaron dependencias: DRF, SimpleJWT, django-filter y drf-spectacular ya figuraban en `requirements.txt` y estaban instalados desde Fase 2.
+- Se subió el `SECRET_KEY` de testing a 56 caracteres para eliminar el `InsecureKeyLengthWarning` de PyJWT en la suite (no afecta producción ni desarrollo).
+
 ## Decisiones heredadas de `inicio.md`
 
 - GitFlow simplificado, PRs chicos y enfocados, commits semánticos. **La IA nunca ejecuta Git: solo sugiere comandos.**
@@ -109,7 +123,7 @@
 ## Pendientes
 
 - **Fase 6:** completada (proveedores, catálogo, presupuesto en sesión, ventas con totales y control de stock). Verificado con `check`, `migrate`, `cargar_roles` y 102 tests OK.
-- **Fase 7:** API, Swagger en `/api/schema/swagger/` y JWT.
+- **Fase 7:** completada (ViewSets, routers, serializers 3 niveles, JWT, filtros, baja lógica, Swagger en `/api/schema/swagger/`). Verificado con `check`, `spectacular --validate` (0 errores/warnings) y 156 tests OK.
 - **Fases 8-9:** Docker/Render, README final y cierre de bitácora.
 
 ## Riesgos y recordatorios

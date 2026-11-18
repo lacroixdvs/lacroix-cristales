@@ -3,7 +3,7 @@
 from .base import *  # noqa: F401,F403
 
 DEBUG = False
-SECRET_KEY = "clave-solo-para-tests"
+SECRET_KEY = "clave-solo-para-tests-suffixed-longitud-suficiente-jwt"
 ALLOWED_HOSTS = ["testserver"]
 
 DATABASES = {

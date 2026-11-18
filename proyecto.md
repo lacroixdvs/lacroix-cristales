@@ -30,7 +30,8 @@ lacroix-cristales/
 ├── clientes/             # Cliente mayorista
 ├── catalogo/             # Producto
 ├── ventas/               # Venta y DetalleVenta
-├── api/                  # routers, serializers 3 niveles, JWT, Swagger
+├── api/                  # permisos, filters, viewsets, routers, JWT, esquema,
+                          # tests; los serializers 3 niveles viven en cada app de dominio
 ├── templates/
 │   ├── base.html
 │   ├── home.html
@@ -72,7 +73,7 @@ lacroix-cristales/
 | `clientes` | CRUD de clientes mayoristas con baja lógica, validación de CUIT y descuento | Completa en Fase 5 (check OK, 25 tests) — patrón de referencia |
 | `catalogo` | Productos, baja lógica y presupuesto en sesión | Completa en Fase 6 (check OK, 20 tests) |
 | `ventas` | Ventas, detalles, totales y control de stock | Completa en Fase 6 (check OK, 22 tests) |
-| `api` | Routers, serializers Base/Get/Post, JWT y Swagger | Planificada (Fase 7) |
+| `api` | Routers, permisos, filtros, JWT, esquema y Swagger; serializers 3 niveles en cada app de dominio | Completa en Fase 7 (check OK, 54 tests) |
 
 ## Capa de presentación (Fase 3)
 
@@ -172,19 +173,24 @@ Usuario (vendedor) 1 ──── * Venta
 | Ventas | CRUD total | Crear / consultar / editar borradores, cargar ítems y confirmar (solo propias) | ✘ |
 | Baja lógica de ventas | ✔ (incluso confirmadas) | ✘ | ✘ |
 | Presupuesto en sesión | ✔ | ✔ | ✔ (propio) |
-| API | Según permisos | Según permisos | Solo GET de catálogo |
+| API | CRUD total en los 5 recursos, baja de ventas y acciones de stock | Lectura de clientes/catálogo; crear y gestionar solo sus ventas (confirmar/cancelar borradores); sin baja de ventas | Solo GET de productos activos en `/api/catalogo/` |
 
-Los grupos de Django Auth son la fuente de verdad de permisos; el campo `rol` y el ocultamiento en templates son derivados/cosméticos.
+Los grupos de Django Auth son la fuente de verdad de permisos; el campo `rol` y el ocultamiento en templates son derivados/cosméticos. La API usa los mismos grupos vía `core.roles.rol_de()`, no permisos de modelo de DRF.
 
 ## Endpoints
 
 **Web (MVT) implementados:** `/`, `/dashboard/`, `/accounts/login/`, `/accounts/registro/`, `/usuarios/`, `/proveedores/`, `/clientes/`, `/catalogo/`, `/catalogo/presupuesto/` (alias: `/presupuesto/`), `/ventas/`.
 
-**API REST:** `/api/token/`, `/api/token/refresh/`, `/api/usuarios/`, `/api/proveedores/`, `/api/clientes/`, `/api/catalogo/`, `/api/ventas/`, `/api/schema/swagger/`.
+**API REST implementada:** `/api/token/`, `/api/token/refresh/`, `/api/usuarios/`, `/api/proveedores/`, `/api/clientes/`, `/api/catalogo/`, `/api/ventas/`, `/api/schema/`, `/api/schema/swagger/`.
+
+Acciones de ventas: `POST /api/ventas/<id>/confirmar/`, `POST /api/ventas/<id>/cancelar/`, `POST /api/ventas/<id>/detalles/agregar/`, `DELETE /api/ventas/<id>/detalles/<detalle_id>/`. Todas delegan en `ventas.services`.
+
+**Configuración API:** autenticación JWT (Bearer) + sesión para Swagger, `IsAuthenticated` global, paginación de 20, filtros `django-filter` / `search` / `ordering`, metadata OpenAPI "Vit Cristales API" v1.0.0.
 
 ## Convenciones
 
-- Un serializer por app con patrón de 3 niveles: `<Modelo>BaseSerializer`, `<Modelo>GetSerializer`, `<Modelo>PostSerializer`.
+- Un serializer por app de dominio con patrón de 3 niveles: `<Modelo>BaseSerializer`, `<Modelo>GetSerializer`, `<Modelo>PostSerializer`. `api/` solo agrupa permisos, filtros, viewsets, routers y tests (no tiene modelos ni migraciones).
+- Los `ViewSet` usan el `GetSerializer` para `list`/`retrieve` y el `PostSerializer` para escrituras; `DELETE` hace baja lógica (`activo=False`), jamás borrado físico.
 - Forms en la app dueña del modelo; `select_related`/`prefetch_related` en listados y detalles.
 - Mensajes de éxito/error en `templates/partials/messages.html`.
 - Una migración por cambio lógico, con nombre descriptivo.

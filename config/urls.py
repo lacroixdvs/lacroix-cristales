@@ -16,4 +16,5 @@ urlpatterns = [
     path("catalogo/", include("catalogo.urls")),
     path("presupuesto/", RedirectView.as_view(pattern_name="catalogo:presupuesto", permanent=False)),
     path("ventas/", include("ventas.urls")),
+    path("api/", include("api.urls")),
 ]
