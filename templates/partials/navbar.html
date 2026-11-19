@@ -1,25 +1,35 @@
 {% load roles %}
-<header class="border-b border-gray-100 bg-white shadow-sm">
-  <div class="mx-auto flex max-w-full items-center justify-between px-6 py-4">
-    <a href="{% url 'core:home' %}" class="text-lg font-bold text-primary-700">Vit Cristales</a>
+<nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
+  <div class="container-fluid">
+    <a href="{% url 'core:home' %}" class="navbar-brand fw-bold text-vit mb-0 fs-4">
+      <i class="bi bi-diamond-half me-2" aria-hidden="true"></i>Vit Cristales
+    </a>
 
-    <nav class="flex items-center gap-4 text-sm text-gray-600">
+    <div class="nav navbar-nav nav-pills flex-row align-items-center gap-2 ms-auto small">
       {% if request.user.is_authenticated %}
         {% es_rol request.user "ADM" as es_adm %}
         {% if es_adm %}
-          <a href="{% url 'usuarios:usuario-list' %}" class="text-gray-700 hover:underline">Usuarios</a>
-          <a href="{% url 'api:swagger' %}" class="text-gray-700 hover:underline" target="_blank" rel="noopener">API / Swagger</a>
+          <a href="{% url 'usuarios:usuario-list' %}" class="nav-link text-secondary py-1">
+            <i class="bi bi-people me-1" aria-hidden="true"></i>Usuarios
+          </a>
+          <a href="{% url 'api:swagger' %}" class="nav-link text-secondary py-1" target="_blank" rel="noopener">
+            <i class="bi bi-braces-asterisk me-1" aria-hidden="true"></i>API / Swagger
+          </a>
         {% endif %}
-        <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">{{ request.user|rol_actual }}</span>
-        <span class="font-medium text-gray-900">{{ request.user.get_full_name|default:request.user.username }}</span>
-        <form method="post" action="{% url 'usuarios:logout' %}" class="inline">
+        <span class="badge rounded-pill text-bg-light border">{{ request.user|rol_actual }}</span>
+        <span class="fw-semibold text-body">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <form method="post" action="{% url 'usuarios:logout' %}" class="d-inline m-0">
           {% csrf_token %}
-          <button type="submit" class="text-red-600 hover:underline">Cerrar sesión</button>
+          <button type="submit" class="btn btn-link btn-sm text-danger text-decoration-none p-0">
+            <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Cerrar sesión
+          </button>
         </form>
       {% else %}
-        <a href="{% url 'usuarios:login' %}" class="rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-700">Ingresar</a>
-        <a href="{% url 'usuarios:registro' %}" class="text-primary-700 hover:underline">Registrate</a>
+        <a href="{% url 'usuarios:login' %}" class="btn btn-vit btn-sm">
+          <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Ingresar
+        </a>
+        <a href="{% url 'usuarios:registro' %}" class="nav-link text-vit py-1">Registrate</a>
       {% endif %}
-    </nav>
+    </div>
   </div>
-</header>
+</nav>

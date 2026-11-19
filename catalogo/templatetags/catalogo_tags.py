@@ -1,17 +1,17 @@
-"""Etiquetas de presentación del catálogo (clases de `design.md`)."""
+"""Etiquetas de presentación del catálogo (badges de Bootstrap 5)."""
 
 from django import template
 
 register = template.Library()
 
 BADGES = {
-    "VIDRIO": "bg-sky-100 text-sky-800",
-    "MAMPARA": "bg-indigo-100 text-indigo-800",
-    "ESPEJO": "bg-purple-100 text-purple-800",
-    "CERRAMIENTO": "bg-teal-100 text-teal-800",
+    "VIDRIO": "text-bg-info",
+    "MAMPARA": "text-bg-primary",
+    "ESPEJO": "text-bg-secondary",
+    "CERRAMIENTO": "text-bg-success",
 }
 
 
 @register.filter
 def badge_categoria(categoria):
-    return BADGES.get(categoria, "bg-gray-100 text-gray-800")
+    return BADGES.get(categoria, "text-bg-light border")

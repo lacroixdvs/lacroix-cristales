@@ -1,72 +1,76 @@
-<table class="min-w-full text-sm">
-  <thead class="text-xs uppercase text-gray-500">
-    <tr>
-      <th class="py-2 text-left">Usuario</th>
-      <th class="py-2 text-left">Nombre</th>
-      <th class="py-2 text-left">Email</th>
-      <th class="py-2 text-left">Rol</th>
-      <th class="py-2 text-left">Estado</th>
-      <th class="py-2 text-right">Acciones</th>
-    </tr>
-  </thead>
-  <tbody class="divide-y divide-gray-100">
-    {% for usuario in usuarios %}
-      <tr class="hover:bg-gray-50 cursor-pointer">
-        <td class="py-2 font-medium text-gray-900">{{ usuario.username }}</td>
-        <td class="py-2">{{ usuario.get_full_name|default:"-" }}</td>
-        <td class="py-2">{{ usuario.email }}</td>
-        <td class="py-2">
-          <span class="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700">{{ usuario.rol }}</span>
-        </td>
-        <td class="py-2">
-          {% if usuario.activo %}
-            <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Activo</span>
-          {% else %}
-            <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Inactivo</span>
-          {% endif %}
-        </td>
-        <td class="py-2 text-right whitespace-nowrap">
-          <a href="{% url 'usuarios:usuario-update' usuario.pk %}" class="text-primary-700 hover:underline">Editar</a>
-          {% if usuario.activo %}
-            <button type="button" data-modal-open="modal-baja-{{ usuario.pk }}" class="ml-3 text-red-600 hover:underline">Dar de baja</button>
-          {% endif %}
-        </td>
-      </tr>
-    {% empty %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0 small">
+    <thead class="table-light text-uppercase small">
       <tr>
-        <td colspan="6" class="py-4 text-gray-500">No hay usuarios para mostrar.</td>
+        <th scope="col">Usuario</th>
+        <th scope="col">Nombre</th>
+        <th scope="col">Email</th>
+        <th scope="col">Rol</th>
+        <th scope="col">Estado</th>
+        <th scope="col" class="text-end">Acciones</th>
       </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {% for usuario in usuarios %}
+        <tr>
+          <td class="fw-semibold">{{ usuario.username }}</td>
+          <td>{{ usuario.get_full_name|default:"-" }}</td>
+          <td>{{ usuario.email }}</td>
+          <td><span class="badge text-bg-primary">{{ usuario.rol }}</span></td>
+          <td>
+            {% if usuario.activo %}
+              <span class="badge text-bg-success">Activo</span>
+            {% else %}
+              <span class="badge text-bg-danger">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            <a href="{% url 'usuarios:usuario-update' usuario.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
+            {% if usuario.activo %}
+              <button type="button" data-modal-open="modal-baja-{{ usuario.pk }}" class="btn btn-sm btn-outline-danger ms-1">Dar de baja</button>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6" class="text-body-secondary py-3">No hay usuarios para mostrar.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
 {% for usuario in usuarios %}
   {% if usuario.activo %}
-    <dialog id="modal-baja-{{ usuario.pk }}" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
-      <div class="p-6">
-        <div class="flex items-start justify-between">
-          <h2 class="text-lg font-semibold text-gray-700">Dar de baja a {{ usuario.username }}</h2>
-          <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+    <dialog id="modal-baja-{{ usuario.pk }}" class="rounded-3 shadow-lg p-0">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5">Dar de baja a {{ usuario.username }}</h2>
+          <button type="button" data-modal-close class="btn-close" aria-label="Cerrar"></button>
         </div>
-        <p class="mt-4 text-sm text-gray-600">El usuario quedará inactivo; no se borra ningún dato.</p>
-        <form method="post" action="{% url 'usuarios:usuario-baja' usuario.pk %}" class="mt-6 flex gap-3">
-          {% csrf_token %}
-          <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
-          <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
-        </form>
+        <div class="modal-body small text-body-secondary">
+          El usuario quedará inactivo; no se borra ningún dato.
+        </div>
+        <div class="modal-footer">
+          <form method="post" action="{% url 'usuarios:usuario-baja' usuario.pk %}" class="d-flex gap-2 m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Confirmar baja</button>
+            <button type="button" data-modal-close class="btn btn-outline-secondary">Cancelar</button>
+          </form>
+        </div>
       </div>
     </dialog>
   {% endif %}
 {% endfor %}
 
 {% if is_paginated %}
-  <nav class="mt-4 flex gap-4 text-sm text-primary-700">
+  <nav class="mt-3 d-flex flex-wrap align-items-center gap-3 small">
     {% if page_obj.has_previous %}
-      <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Anterior</a>
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.previous_page_number }}" class="text-vit text-decoration-none">Anterior</a>
     {% endif %}
-    <span class="text-gray-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    <span class="text-body-secondary">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-      <a href="?q={{ q }}&page={{ page_obj.next_page_number }}">Siguiente</a>
+      <a href="?{{ query_base }}{% if query_base %}&amp;{% endif %}page={{ page_obj.next_page_number }}" class="text-vit text-decoration-none">Siguiente</a>
     {% endif %}
   </nav>
 {% endif %}

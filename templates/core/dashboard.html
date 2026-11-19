@@ -4,32 +4,40 @@
 {% block title %}Dashboard — Vit Cristales{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-between">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-    <p class="mt-1 text-sm text-gray-500">
+    <h1 class="h2 fw-bold mb-1">Dashboard</h1>
+    <p class="text-body-secondary small mb-0">
       Perfil activo:
-      <span class="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700">{{ rol_etiqueta }}</span>
+      <span class="badge text-bg-primary">{{ rol_etiqueta }}</span>
     </p>
   </div>
 </div>
 
-<section class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+<section class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3 mt-1">
   {% for modulo in modulos %}
-    <article class="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h2 class="text-sm font-semibold text-gray-900">{{ modulo }}</h2>
-      <p class="mt-1 text-xs text-gray-500">Módulo habilitado para tu perfil.</p>
-    </article>
+    <div class="col">
+      <article class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h6 fw-semibold mb-1">{{ modulo }}</h2>
+          <p class="text-body-secondary small mb-0">Módulo habilitado para tu perfil.</p>
+        </div>
+      </article>
+    </div>
   {% empty %}
-    <p class="text-sm text-gray-500">No hay módulos habilitados para este perfil.</p>
+    <div class="col">
+      <p class="text-body-secondary small">No hay módulos habilitados para este perfil.</p>
+    </div>
   {% endfor %}
 </section>
 
 {% if es_usuario %}
-<section class="mt-8 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-  <h2 class="text-lg font-semibold text-gray-700">Armar presupuesto</h2>
-  <p class="mt-1 text-xs text-gray-500">La selección de artículos se guarda en sesión (se completa en Fase 4).</p>
-  <div class="mt-4">{% include "partials/live-search.html" %}</div>
+<section class="card border-0 shadow-sm mt-4">
+  <div class="card-body">
+    <h2 class="h5">Armar presupuesto</h2>
+    <p class="text-body-secondary small mb-3">La selección de artículos se guarda en sesión (se completa en Fase 4).</p>
+    {% include "partials/live-search.html" %}
+  </div>
 </section>
 {% endif %}
 

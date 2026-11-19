@@ -3,13 +3,13 @@
 from django import forms
 
 from clientes.models import Cliente
-from core.forms import EstiloTailwindMixin
+from core.forms import EstiloBootstrapMixin
 from usuarios.models import Rol, Usuario
 
 from .models import Venta
 
 
-class VentaForm(EstiloTailwindMixin, forms.ModelForm):
+class VentaForm(EstiloBootstrapMixin, forms.ModelForm):
     class Meta:
         model = Venta
         fields = ("cliente", "vendedor", "observaciones")

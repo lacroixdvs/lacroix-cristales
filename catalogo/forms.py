@@ -2,12 +2,12 @@ from decimal import Decimal
 
 from django import forms
 
-from core.forms import EstiloTailwindMixin
+from core.forms import EstiloBootstrapMixin
 
 from .models import Producto
 
 
-class ProductoForm(EstiloTailwindMixin, forms.ModelForm):
+class ProductoForm(EstiloBootstrapMixin, forms.ModelForm):
     class Meta:
         model = Producto
         fields = (

@@ -1,13 +1,13 @@
 {% if messages %}
-  <div class="mb-4 space-y-2">
+  <div class="mb-4 d-grid gap-2">
     {% for message in messages %}
-      <div role="alert" class="flex items-start justify-between rounded-lg px-4 py-3 text-sm
-        {% if 'success' in message.tags %}bg-green-100 text-green-800
-        {% elif 'error' in message.tags %}bg-red-100 text-red-800
-        {% elif 'warning' in message.tags %}bg-yellow-100 text-yellow-800
-        {% else %}bg-sky-100 text-sky-800{% endif %}">
-        <span>{{ message }}</span>
-        <button type="button" class="ml-3 font-semibold" onclick="this.parentElement.remove()" aria-label="Cerrar mensaje">&#10005;</button>
+      <div role="alert" class="alert alert-dismissible fade show mb-0
+        {% if 'success' in message.tags %}alert-success
+        {% elif 'error' in message.tags %}alert-danger
+        {% elif 'warning' in message.tags %}alert-warning
+        {% else %}alert-info{% endif %}">
+        <i class="bi bi-info-circle me-2" aria-hidden="true"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar mensaje"></button>
       </div>
     {% endfor %}
   </div>

@@ -1,0 +1,60 @@
+/* Vit Cristales — tema institucional sobre Bootstrap 5.3.
+   Sin compilación: se sobreescriben las variables CSS de Bootstrap. */
+
+:root {
+  /* Verde esmeralda institucional */
+  --bs-primary: #15803d;
+  --bs-primary-rgb: 21, 128, 61;
+  --bs-primary-bg-subtle: #dcfce7;
+  --bs-primary-border-subtle: #86efac;
+  --bs-primary-text-emphasis: #14532d;
+
+  /* Gris pizarra para textos y superficies */
+  --bs-body-color: #334155;
+  --bs-body-color-rgb: 51, 65, 85;
+  --bs-body-bg: #f8fafc;
+  --bs-body-bg-rgb: 248, 250, 252;
+  --bs-secondary-color: #64748b;
+  --bs-secondary-color-rgb: 100, 116, 139;
+  --bs-border-color: #e2e8f0;
+  --bs-border-color-translucent: rgba(100, 116, 139, 0.18);
+
+  --bs-font-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.navbar-brand,
+.text-vit {
+  color: var(--bs-primary) !important;
+}
+
+.bg-vit {
+  background-color: var(--bs-primary) !important;
+  color: #fff !important;
+}
+
+.btn-vit {
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: #166534;
+  --bs-btn-hover-border-color: #166534;
+  --bs-btn-active-bg: #14532d;
+  --bs-btn-active-border-color: #14532d;
+}
+
+/* Los <dialog> nativos usados por modales.js se ven como tarjetas Bootstrap. */
+dialog {
+  border: 0;
+  max-width: min(32rem, calc(100vw - 2rem));
+}
+
+dialog::backdrop {
+  background-color: rgba(15, 23, 42, 0.55);
+}
+
+.table > :not(caption) > * > * {
+  vertical-align: middle;
+}

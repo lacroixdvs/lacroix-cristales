@@ -4,61 +4,73 @@
 {% block title %}{{ producto.nombre }} — Vit Cristales{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-2xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-  <div class="flex items-start justify-between">
-    <div>
-      <p class="text-xs font-semibold uppercase tracking-wide text-primary-600">{{ producto.codigo }}</p>
-      <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ producto.nombre }}</h1>
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+          <div>
+            <p class="text-uppercase small fw-semibold text-vit mb-1">{{ producto.codigo }}</p>
+            <h1 class="h2 fw-bold mb-0">{{ producto.nombre }}</h1>
+          </div>
+          <span class="badge {{ producto.categoria|badge_categoria }}">{{ producto.get_categoria_display }}</span>
+        </div>
+
+        <dl class="row g-3 mt-3 mb-0 small">
+          <div class="col-12 col-md-6"><dt class="text-uppercase text-body-secondary">Espesor</dt><dd class="mb-0">{{ producto.espesor|default:"-" }}</dd></div>
+          <div class="col-12 col-md-6"><dt class="text-uppercase text-body-secondary">Precio unitario</dt><dd class="mb-0">${{ producto.precio_unitario }}</dd></div>
+          <div class="col-12 col-md-6"><dt class="text-uppercase text-body-secondary">Stock</dt><dd class="mb-0">{{ producto.stock }}</dd></div>
+          <div class="col-12 col-md-6"><dt class="text-uppercase text-body-secondary">Proveedor</dt><dd class="mb-0">{{ producto.proveedor.razon_social }}</dd></div>
+          <div class="col-12"><dt class="text-uppercase text-body-secondary">Descripción</dt><dd class="mb-0">{{ producto.descripcion|default:"-" }}</dd></div>
+        </dl>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          {% if es_adm %}
+            <a href="{% url 'catalogo:producto-update' producto.pk %}" class="btn btn-vit">Editar</a>
+            {% if producto.activo %}
+              <button type="button" data-modal-open="modal-baja-detalle" class="btn btn-danger">Dar de baja</button>
+            {% else %}
+              <form method="post" action="{% url 'catalogo:producto-reactivar' producto.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-vit">Reactivar</button>
+              </form>
+            {% endif %}
+          {% endif %}
+          {% if producto.activo %}
+            <form method="post" action="{% url 'catalogo:presupuesto' %}">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="agregar">
+              <input type="hidden" name="producto_id" value="{{ producto.pk }}">
+              <input type="hidden" name="cantidad" value="1">
+              <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>Agregar al presupuesto
+              </button>
+            </form>
+          {% endif %}
+          <a href="{% url 'catalogo:producto-list' %}" class="btn btn-outline-secondary">Volver</a>
+        </div>
+      </div>
     </div>
-    <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ producto.categoria|badge_categoria }}">{{ producto.get_categoria_display }}</span>
-  </div>
-
-  <dl class="mt-6 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-    <div><dt class="text-xs uppercase text-gray-500">Espesor</dt><dd class="mt-1 text-gray-900">{{ producto.espesor|default:"-" }}</dd></div>
-    <div><dt class="text-xs uppercase text-gray-500">Precio unitario</dt><dd class="mt-1 text-gray-900">${{ producto.precio_unitario }}</dd></div>
-    <div><dt class="text-xs uppercase text-gray-500">Stock</dt><dd class="mt-1 text-gray-900">{{ producto.stock }}</dd></div>
-    <div><dt class="text-xs uppercase text-gray-500">Proveedor</dt><dd class="mt-1 text-gray-900">{{ producto.proveedor.razon_social }}</dd></div>
-    <div class="sm:col-span-2"><dt class="text-xs uppercase text-gray-500">Descripción</dt><dd class="mt-1 text-gray-900">{{ producto.descripcion|default:"-" }}</dd></div>
-  </dl>
-
-  <div class="mt-8 flex flex-wrap gap-3">
-    {% if es_adm %}
-      <a href="{% url 'catalogo:producto-update' producto.pk %}" class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700">Editar</a>
-      {% if producto.activo %}
-        <button type="button" data-modal-open="modal-baja-detalle" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Dar de baja</button>
-      {% else %}
-        <form method="post" action="{% url 'catalogo:producto-reactivar' producto.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700">Reactivar</button>
-        </form>
-      {% endif %}
-    {% endif %}
-    {% if producto.activo %}
-      <form method="post" action="{% url 'catalogo:presupuesto' %}">
-        {% csrf_token %}
-        <input type="hidden" name="accion" value="agregar">
-        <input type="hidden" name="producto_id" value="{{ producto.pk }}">
-        <input type="hidden" name="cantidad" value="1">
-        <button type="submit" class="rounded-lg border border-primary-600 px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Agregar al presupuesto</button>
-      </form>
-    {% endif %}
-    <a href="{% url 'catalogo:producto-list' %}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Volver</a>
   </div>
 </div>
 
 {% if es_adm and producto.activo %}
-  <dialog id="modal-baja-detalle" class="w-full max-w-lg rounded-xl p-0 shadow-2xl backdrop:bg-black/50">
-    <div class="p-6">
-      <div class="flex items-start justify-between">
-        <h2 class="text-lg font-semibold text-gray-700">Dar de baja a {{ producto.nombre }}</h2>
-        <button type="button" data-modal-close class="text-gray-500 hover:text-gray-800" aria-label="Cerrar">&#10005;</button>
+  <dialog id="modal-baja-detalle" class="rounded-3 shadow-lg p-0">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5">Dar de baja a {{ producto.nombre }}</h2>
+        <button type="button" data-modal-close class="btn-close" aria-label="Cerrar"></button>
       </div>
-      <p class="mt-4 text-sm text-gray-600">El producto dejará de estar disponible; no se borra ningún dato.</p>
-      <form method="post" action="{% url 'catalogo:producto-baja' producto.pk %}" class="mt-6 flex gap-3">
-        {% csrf_token %}
-        <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Confirmar baja</button>
-        <button type="button" data-modal-close class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
-      </form>
+      <div class="modal-body small text-body-secondary">
+        El producto dejará de estar disponible; no se borra ningún dato ni se descuenta stock.
+      </div>
+      <div class="modal-footer">
+        <form method="post" action="{% url 'catalogo:producto-baja' producto.pk %}" class="d-flex gap-2 m-0">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Confirmar baja</button>
+          <button type="button" data-modal-close class="btn btn-outline-secondary">Cancelar</button>
+        </form>
+      </div>
     </div>
   </dialog>
 {% endif %}

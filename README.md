@@ -28,7 +28,7 @@ La solución es **híbrida**: una misma base de datos y un mismo modelo de permi
 | Capa | Tecnología | Uso |
 |---|---|---|
 | Backend MVT | Django 5.x + Templates | Interfaz web para ADM, VENDEDOR y USUARIO |
-| Frontend | TailwindCSS vía CDN, Alpine.js / JS vanilla, `<dialog>` nativo | Estilos, modales, dropdowns y live search sin build step |
+| Frontend | Bootstrap 5.3 + Bootstrap Icons 1.11 vía CDN, CSS institucional propio, JS vanilla, `<dialog>` nativo | Estilos, modales y live search sin build step |
 | API REST | Django REST Framework + `django-filter` | Recursos bajo `/api/` con paginación, búsqueda y orden |
 | Autenticación API | `djangorestframework-simplejwt` | Access (60 min) / refresh (1 día) + sesión para Swagger |
 | Documentación API | `drf-spectacular` | Esquema OpenAPI y Swagger UI |
@@ -59,7 +59,10 @@ lacroix-cristales/
 ├── ventas/                     # Venta, DetalleVenta, services.py (totales y stock)
 ├── api/                        # permissions, filters, viewsets, routers, URLs y tests
 ├── templates/                  # base.html, partials/, plantillas por app
-├── static/  media/
+├── static/
+│   ├── css/vit-cristales.css   # tema Bootstrap (verde/pizarra, sin build)
+│   └── js/{live-search,modales}.js
+├── media/
 ├── Dockerfile  .dockerignore  docker-compose.yml  render.yaml  entrypoint.sh
 ├── requirements.txt  .env.example  manage.py
 ├── README.md  inicio.md  memoria.md  proyecto.md  bitacora.md  design.md
@@ -249,7 +252,7 @@ $env:DJANGO_SETTINGS_MODULE = "config.settings.testing"
 python manage.py test                                          # 159 tests → OK
 ```
 
-La suite cubre: autenticación JWT, serializers de 3 niveles, filtros, permisos por rol (MVT y API), baja lógica sin borrado físico, stock y totales, acciones de ventas, generación del esquema y carga demo idempotente.
+La suite cubre: autenticación JWT, serializers de 3 niveles, filtros, permisos por rol (MVT y API), baja lógica sin borrado físico, stock y totales, acciones de ventas, generación del esquema y carga demo idempotente. El refactor de la UI a Bootstrap 5.3 no cambió esta cantidad: los mismos 159 tests pasan con `check` sin problemas.
 
 ---
 
@@ -307,6 +310,6 @@ En compose las cabeceras HTTPS se desactivan (`SECURE_SSL_REDIRECT=False`, cooki
 | [`memoria.md`](memoria.md) | Estado final, decisiones técnicas y recordatorios |
 | [`proyecto.md`](proyecto.md) | Apps, modelos, endpoints y configuración de despliegue |
 | [`bitacora.md`](bitacora.md) | Registro cronológico de las 9 fases y checklist del MVP |
-| [`design.md`](design.md) | Guía visual UI/UX (paleta, componentes, layout) |
+| [`design.md`](design.md) | Guía visual UI/UX (Bootstrap 5.3, paleta, componentes, layout) |
 
 **Metodología:** GitFlow simplificado (`main`, `develop`, `feature/*`, `chore/*`, `docs/*`, `bugfix/*`, `hotfix/*`), Pull Requests chicos y commits semánticos. La IA sugiere comandos de Git pero **nunca los ejecuta**; la revisión humana es obligatoria antes de integrar cambios.

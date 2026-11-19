@@ -1,35 +1,48 @@
 {% load roles %}
-<aside class="w-64 shrink-0 border-r border-gray-100 bg-white p-4">
-  <p class="mb-3 text-xs font-semibold uppercase text-gray-500">Navegación</p>
+<aside class="col-md-3 col-lg-2 d-none d-md-block bg-white border-end py-4 px-3">
+  <p class="text-uppercase text-secondary small fw-semibold mb-3">
+    <i class="bi bi-layout-text-sidebar me-1" aria-hidden="true"></i>Navegación
+  </p>
   {% es_rol request.user "ADM" as es_adm %}
   {% es_rol request.user "VENDEDOR" as es_vendedor %}
   {% es_rol request.user "USUARIO" as es_usuario %}
 
-  <ul class="space-y-1 text-sm">
-    <li>
-      <a href="{% url 'core:dashboard' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Dashboard</a>
-    </li>
+  <nav class="nav flex-column nav-pills small">
+    <a href="{% url 'core:dashboard' %}" class="nav-link text-body">
+      <i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Dashboard
+    </a>
 
     {% if es_adm %}
-      <li><a href="{% url 'usuarios:usuario-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Usuarios</a></li>
-      <li><a href="{% url 'proveedores:proveedor-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Proveedores</a></li>
+      <a href="{% url 'usuarios:usuario-list' %}" class="nav-link text-body">
+        <i class="bi bi-people me-2" aria-hidden="true"></i>Usuarios
+      </a>
+      <a href="{% url 'proveedores:proveedor-list' %}" class="nav-link text-body">
+        <i class="bi bi-truck me-2" aria-hidden="true"></i>Proveedores
+      </a>
     {% endif %}
 
     {% if es_adm or es_vendedor %}
-      <li><a href="{% url 'ventas:venta-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Ventas</a></li>
+      <a href="{% url 'ventas:venta-list' %}" class="nav-link text-body">
+        <i class="bi bi-receipt me-2" aria-hidden="true"></i>Ventas
+      </a>
     {% endif %}
 
     {% if es_adm or es_vendedor or es_usuario %}
-      <li><a href="{% url 'catalogo:producto-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Catálogo</a></li>
+      <a href="{% url 'catalogo:producto-list' %}" class="nav-link text-body">
+        <i class="bi bi-grid me-2" aria-hidden="true"></i>Catálogo
+      </a>
     {% endif %}
 
     {% if es_adm or es_vendedor %}
-      <li><a href="{% url 'clientes:cliente-list' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Clientes</a></li>
+      <a href="{% url 'clientes:cliente-list' %}" class="nav-link text-body">
+        <i class="bi bi-building me-2" aria-hidden="true"></i>Clientes
+      </a>
     {% endif %}
 
     {% if es_adm or es_vendedor or es_usuario %}
-      <li><a href="{% url 'catalogo:presupuesto' %}" class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50">Presupuesto</a></li>
+      <a href="{% url 'catalogo:presupuesto' %}" class="nav-link text-body">
+        <i class="bi bi-file-earmark-ruled me-2" aria-hidden="true"></i>Presupuesto
+      </a>
     {% endif %}
-  </ul>
-
+  </nav>
 </aside>

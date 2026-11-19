@@ -80,14 +80,17 @@ lacroix-cristales/
 
 **Estado global:** 9 de 9 fases completadas, **159 tests OK**. Todas las apps y módulos están finalizados.
 
-## Capa de presentación (Fase 3)
+## Capa de presentación (Fase 3, migrada a Bootstrap 5.3)
 
-- `templates/base.html`: Tailwind CDN con paleta `primary` verde, bloques `title`/`content` e inclusión global de los parciales.
-- `templates/partials/`: `navbar.html`, `sidebar.html`, `messages.html` (estilos por nivel), `footer.html`, `modal-base.html` (`<dialog>`) y `live-search.html` (input + contenedor de resultados).
-- `static/js/live-search.js`: debounce de 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState`, event delegation y conservación de filtros vigentes (descarta solo `page`).
-- `static/js/modales.js`: apertura por `data-modal-open`, cierre por `data-modal-close` y click en backdrop; Escape nativo.
+- `templates/base.html`: bloques `title`/`content`, inclusión global de parciales y CDN de Bootstrap 5.3.3 (CSS + JS bundle) y Bootstrap Icons 1.11.3. Antes cargaba Tailwind CDN; el `tailwind.config` inline fue eliminado.
+- `static/css/vit-cristales.css`: tema institucional sin build step. Sobrescribe `--bs-primary` (verde esmeralda), `--bs-body-color` / `--bs-body-bg` / `--bs-border-color` (gris pizarra) y define `.btn-vit`, `.text-vit`, `.bg-vit` y el backdrop de `<dialog>`.
+- `templates/partials/`: `navbar.html`, `sidebar.html`, `messages.html` (`alert alert-dismissible fade show` por nivel), `footer.html`, `modal-base.html` (`<dialog>` con `modal-content`) y `live-search.html` (`input-group` + contenedor de resultados).
+- `static/js/live-search.js`: debounce de 300 ms, `fetch`, reemplazo del contenedor, `history.replaceState`, event delegation y conservación de filtros vigentes (descarta solo `page`). **No se modificó en el refactor.**
+- `static/js/modales.js`: apertura por `data-modal-open`, cierre por `data-modal-close` y click en backdrop; Escape nativo. **No se modificó en el refactor.**
+- `core.forms.EstiloBootstrapMixin` centraliza `form-control` / `form-select` / `form-check-input` para los forms de las cinco apps de dominio.
 - `core/roles.py` resuelve el rol efectivo en backend; `core/templatetags/roles.py` solo lo muestra/condiciona en la UI.
 - Las rutas de autenticación (`/accounts/login/`, `/accounts/logout/`, `/accounts/registro/`) quedan cableadas desde Fase 4. Desde Fase 6 el sidebar tiene enlaces reales a todos los módulos de dominio y al presupuesto.
+- Verificación del refactor: `manage.py check` OK y **159 tests OK** con settings de testing; URLs, roles, lógica y atributos funcionales intactos.
 
 ## Autenticación y roles (Fase 4)
 
@@ -109,7 +112,7 @@ lacroix-cristales/
 
 ## Módulos de la Fase 6
 
-- **Común:** el validador de CUIT pasó a `core/validators.py` (`clientes/validators.py` solo re-exporta) y `core/forms.py` centraliza el estilo Tailwind.
+- **Común:** el validador de CUIT pasó a `core/validators.py` (`clientes/validators.py` solo re-exporta) y `core/forms.py` centraliza el estilo de formularios (hoy `EstiloBootstrapMixin`; en Fase 6 era `EstiloTailwindMixin`).
 - **`proveedores`:** `Proveedor` con CUIT normalizado/único, `rubro` opcional y baja lógica. CRUD exclusivo de ADM con live search, filtro de estado, paginación de 20, detalle, alta, edición, baja y reactivación con `<dialog>`.
 - **`catalogo`:** `Producto` con categorías `VIDRIO`/`MAMPARA`/`ESPEJO`/`CERRAMIENTO`, precio > 0, stock y FK protegida a `Proveedor`. ADM hace CRUD; VENDEDOR y USUARIO leen y buscan por código/nombre/categoría; el filtro de inactivos se ignora para no-ADM.
 - **Presupuesto:** `catalogo/presupuesto.py` guarda la selección en `request.session`; permite agregar, cambiar cantidades, quitar y vaciar, mostrando subtotal/total con precios vigentes. No descuenta stock ni crea ventas. Ruta `/catalogo/presupuesto/` (`/presupuesto/` redirige).

@@ -2,29 +2,13 @@ from decimal import Decimal
 
 from django import forms
 
+from core.forms import EstiloBootstrapMixin
+
 from .models import Cliente
 from .validators import normalizar_cuit
 
 
-class EstiloTailwindMixin:
-    """Solo presentación: clases Tailwind en los widgets."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            if isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs.setdefault(
-                    "class", "h-4 w-4 rounded border-gray-300 text-primary-600"
-                )
-            else:
-                field.widget.attrs.setdefault(
-                    "class",
-                    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm "
-                    "focus:border-primary-600 focus:ring-primary-600",
-                )
-
-
-class ClienteForm(EstiloTailwindMixin, forms.ModelForm):
+class ClienteForm(EstiloBootstrapMixin, forms.ModelForm):
     """Doble validación: normalización de CUIT y rango de descuento, además del modelo."""
 
     class Meta:

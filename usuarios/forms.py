@@ -1,25 +1,12 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
+from core.forms import EstiloBootstrapMixin
+
 from .models import Rol, Usuario
 
 
-class EstiloFormMixin:
-    """Aplica clases Tailwind a los widgets: presentación, sin lógica."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            if isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs.setdefault("class", "h-4 w-4 rounded border-gray-300 text-primary-600")
-            else:
-                field.widget.attrs.setdefault(
-                    "class",
-                    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-600 focus:ring-primary-600",
-                )
-
-
-class RegistroForm(EstiloFormMixin, UserCreationForm):
+class RegistroForm(EstiloBootstrapMixin, UserCreationForm):
     """Registro público: siempre crea un usuario con el rol USUARIO."""
 
     email = forms.EmailField(label="Email", required=True)
@@ -45,7 +32,7 @@ class RegistroForm(EstiloFormMixin, UserCreationForm):
         return usuario
 
 
-class UsuarioAdminBaseForm(EstiloFormMixin, forms.ModelForm):
+class UsuarioAdminBaseForm(EstiloBootstrapMixin, forms.ModelForm):
     """Campos comunes del alta y la edición desde el panel de ADM."""
 
     class Meta:

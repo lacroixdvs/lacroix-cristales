@@ -10,14 +10,14 @@
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
 - **Código generado:** `manage.py`, `config/`, `core`, `usuarios`, `clientes`, `proveedores`, `catalogo`, `ventas`, `api`, artefactos de deploy (`Dockerfile`, `docker-compose.yml`, `render.yaml`, `entrypoint.sh`, `.dockerignore`), comando `cargar_datos_demo` y documentación final (`README.md`, `proyecto.md`, `bitacora.md`). **Proyecto completo.**
-- **Verificación:** `python manage.py check` (dev y production) sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` y `cargar_datos_demo` ejecutados (el segundo dos veces, sin duplicados), esquema OpenAPI validado sin errores ni warnings y **159 tests OK** con settings de testing. Docker no está disponible localmente: imagen y compose sin validación de runtime.
+- **Verificación:** `python manage.py check` (dev y production) sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` y `cargar_datos_demo` ejecutados (el segundo dos veces, sin duplicados), esquema OpenAPI validado sin errores ni warnings y **159 tests OK** con settings de testing. Docker no está disponible localmente: imagen y compose sin validación de runtime. El refactor UI a Bootstrap 5.3 se verificó con `check` y los mismos **159 tests OK**.
 
 ## Stack definido
 
 | Capa | Elección |
 |---|---|
 | Backend web | Django 5.x con MVT (Templates) |
-| Frontend | TailwindCSS vía CDN, Alpine.js/JS vanilla, `<dialog>` nativo, live search |
+| Frontend | Bootstrap 5.3 + Bootstrap Icons 1.11 vía CDN, CSS institucional propio, JS vanilla, `<dialog>` nativo, live search |
 | API | Django REST Framework + `django-filter` + `drf-spectacular` + `djangorestframework-simplejwt` |
 | Autenticación | Sesiones para MVT; JWT (access/refresh) para API; grupos de Django Auth |
 | Base de datos | SQLite en desarrollo; PostgreSQL en producción |
@@ -52,7 +52,7 @@
 - El rol efectivo se resuelve en `core/roles.py`: grupos de Django Auth con prioridad `ADM` > `VENDEDOR` > `USUARIO`, y fallback al campo `Usuario.rol`. Desde Fase 4 ambos se mantienen sincronizados (ver registro de Fase 4).
 - `DashboardView` usa `LoginRequiredMixin` y entrega a la plantilla `rol`, `rol_etiqueta`, `modulos` y flags `es_adm`/`es_vendedor`/`es_usuario`. La lógica de qué módulo se muestra vive en `MODULOS_POR_ROL` (backend), no en el template.
 - Los tags `rol_actual` y `es_rol` solo presentan/condicionan la UI; no validan permisos.
-- Tailwind se carga por CDN con un `tailwind.config` inline que define la paleta `primary` (verde) de `design.md`. No hay build step.
+- Historical: en Fase 3 se cargaba Tailwind por CDN con un `tailwind.config` inline para la paleta `primary`. **Reemplazado en el refactor UI** por Bootstrap 5.3 + `static/css/vit-cristales.css`; tampoco hay build step.
 - `base.html` incluye los parciales `navbar`, `sidebar`, `messages` y `footer` de forma global. `messages.html` aplica clases por nivel del mensaje.
 - `static/js/live-search.js` y `static/js/modales.js` son esqueletos genéricos configurados por atributos `data-*`; aún no apuntan a endpoints reales de dominio (eso llega con los CRUDs).
 - `LOGIN_URL = "/accounts/login/"` y los enlaces de login/logout del navbar quedan como rutas previstas: se cablean recién en Fase 4. **(Ya cableados en Fase 4.)**
@@ -82,7 +82,7 @@
 
 ## Registro técnico de la Fase 6
 
-- El validador de CUIT se movió a `core/validators.py`. `clientes/validators.py` quedó como re-export para no romper importaciones existentes, y `Cliente` importa directamente desde `core`. El mixin de estilos Tailwind también se centralizó en `core/forms.py` (`EstiloTailwindMixin`).
+- El validador de CUIT se movió a `core/validators.py`. `clientes/validators.py` quedó como re-export para no romper importaciones existentes, y `Cliente` importa directamente desde `core`. El mixin de estilos se centralizó en `core/forms.py` (antes `EstiloTailwindMixin`; hoy `EstiloBootstrapMixin`).
 - `Proveedor` reutiliza el mismo CUIT normalizado que `Cliente` y agrega `rubro` opcional. Su CRUD es **solo ADM**; el filtro `activo` y el live search funcionan como en `clientes` (razón social/CUIT/email/rubro).
 - `Producto.categoria` usa `TextChoices` (`VIDRIO`, `MAMPARA`, `ESPEJO`, `CERRAMIENTO`). `precio_unitario` tiene `MinValueValidator(0.01)` en el modelo y `clean_precio_unitario()` en el form. `proveedor` es FK con `PROTECT`, por lo que dar de baja un proveedor nunca borra sus productos (la baja es lógica).
 - En `catalogo`, ADM hace CRUD; VENDEDOR y USUARIO leen y buscan. El filtro de estado se ignora en backend para no-ADM (igual que en `clientes`). El detalle de productos inactivos tampoco es accesible para ellos.
@@ -140,6 +140,16 @@
 - Se agregaron 3 tests en `core/test_datos_demo.py` (carga inicial + idempotencia, roles/venta confirmada, borrador sin stock) llevando la suite de 156 a **159 tests**.
 - El `README.md` definitivo incluye dominio, arquitectura híbrida, DER lógico con cardinalidades y reglas de integridad, matriz completa de roles, tabla de endpoints MVT/API/JWT/Swagger, guía de instalación, comandos demo, verificación, Docker/Render y un espacio visible para completar el enlace al deploy productivo.
 - No se ejecutó ningún comando de Git en ninguna fase; la integración la realizó el usuario en cada rama.
+
+## Registro del refactor UI (Tailwind → Bootstrap 5.3)
+
+- La capa de presentación migró por completo a Bootstrap 5.3.3 + Bootstrap Icons 1.11.3 cargados por CDN en `templates/base.html`. Se eliminó el CDN de Tailwind y su `tailwind.config` inline.
+- Se creó `static/css/vit-cristales.css` con la paleta institucional: verde esmeralda (`--bs-primary: #15803d`) y gris pizarra (`--bs-body-color`, `--bs-body-bg`, `--bs-border-color`). Define además `.btn-vit`, `.text-vit`, `.bg-vit` y el estilo de `dialog` / `dialog::backdrop`. No requiere build.
+- Layout y componentes: `container-fluid`, `row g-0`, navbar con `nav-pills`, sidebar por rol, `card`, `table table-hover align-middle`, `badge`, `btn`, `form-control`, `form-select`, `form-check-input`, `alert alert-dismissible fade show` e `input-group`.
+- `core.forms.EstiloBootstrapMixin` reemplaza a `EstiloTailwindMixin`: aplica `form-check-input`, `form-select` o `form-control` según el widget, sin tocar validaciones. Los forms de `usuarios`, `clientes`, `proveedores`, `catalogo` y `ventas` lo reutilizan.
+- Los filtros de presentación `badge_categoria` y `badge_estado` ahora devuelven clases `text-bg-*` de Bootstrap.
+- Regla respetada: no se modificaron `static/js/live-search.js` ni `static/js/modales.js`, ni ningún `id`, `name`, `action`, `method`, atributo `data-*` o bloque `{% if %}` / `{% for %}` funcional. Se conservaron `buscador-articulos`, `resultados-articulos`, `modal-base` y `data-modal-close`.
+- Verificación: `manage.py check` sin problemas y **159 tests OK** con `config.settings.testing`. No se ejecutó ningún comando de Git; la rama de trabajo es `refactor/ui-bootstrap`.
 
 ## Pendientes
 

@@ -284,3 +284,32 @@
 **Siguiente**
 
 - Cierre de la entrega: el usuario integra esta rama y completa el enlace al deploy productivo.
+
+## 2026-11-18 — Refactor UI: Tailwind → Bootstrap 5.3
+
+> Las entradas de las Fases 3 a 9 describen Tailwind porque era el estado de ese momento. Esta entrada registra el cambio de sistema visual; la lógica de negocio no se tocó.
+
+**Qué se hizo**
+
+- Se reemplazó el CDN de Tailwind y su `tailwind.config` inline en `templates/base.html` por Bootstrap 5.3.3 (CSS + JS bundle) y Bootstrap Icons 1.11.3, siempre vía CDN y sin build step.
+- Se creó `static/css/vit-cristales.css` con la paleta institucional: verde esmeralda (`--bs-primary: #15803d`) y gris pizarra (`--bs-body-color`, `--bs-body-bg`, `--bs-border-color`). Define también `.btn-vit`, `.text-vit`, `.bg-vit` y el backdrop oscurecido de los `<dialog>`.
+- Se migraron todos los templates a componentes Bootstrap: `container-fluid`, `navbar`/`nav-pills`, sidebar por rol, `card`, `table table-hover align-middle` dentro de `table-responsive`, `badge`, `btn`, `form-label`, `form-control`, `form-select`, `form-check-input`, `input-group` y `alert alert-dismissible fade show`.
+- `core.forms.EstiloTailwindMixin` pasó a llamarse `EstiloBootstrapMixin` y aplica la clase nativa según el widget. Los forms de `usuarios`, `clientes`, `proveedores`, `catalogo` y `ventas` dejaron de importar el mixin antiguo.
+- Los filtros `badge_categoria` (`catalogo`) y `badge_estado` (`ventas`) ahora devuelven clases `text-bg-*`.
+- Se conservaron intactos `static/js/live-search.js` y `static/js/modales.js`, junto con todos los `id`, `name`, `action`, `method`, atributos `data-*` y bloques `{% if %}` / `{% for %}` funcionales. En particular: `buscador-articulos`, `resultados-articulos`, `modal-base`, `data-modal-open`, `data-modal-close` y los parámetros de paginación `query_base`.
+- Se actualizaron `design.md`, `memoria.md`, `proyecto.md`, `README.md` y esta bitácora para reflejar Bootstrap 5.3 como sistema visual vigente.
+
+**Archivos tocados**
+
+- Modificados: `templates/base.html`; los 6 parciales de `templates/partials/`; `templates/home.html`, `templates/core/dashboard.html`, `templates/registration/{login,registro}.html`; templates de listado/formulario/detalle y parciales de resultados de `usuarios`, `proveedores`, `clientes`, `catalogo` (incluido `presupuesto.html`) y `ventas`.
+- Modificados: `core/forms.py`, `usuarios/forms.py`, `clientes/forms.py`, `proveedores/forms.py`, `catalogo/forms.py`, `ventas/forms.py`, `catalogo/templatetags/catalogo_tags.py`, `ventas/templatetags/ventas_tags.py`.
+- Creado: `static/css/vit-cristales.css`.
+- Modificados (documentación): `design.md`, `memoria.md`, `proyecto.md`, `README.md`, `bitacora.md`.
+- No modificados: `static/js/live-search.js`, `static/js/modales.js`, vistas, URLs, modelos, permisos, serializers y servicios.
+
+**Verificaciones**
+
+- `python manage.py check` con `config.settings.development`: **sin problemas**.
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **159 tests, OK**.
+- Búsqueda de clases Tailwind en `.html`, `.py` y `.css`: **sin coincidencias**.
+- Git: **ningún comando ejecutado**. El trabajo quedó en la rama `refactor/ui-bootstrap` para que el usuario lo integre.

@@ -1,12 +1,12 @@
 from django import forms
 
-from core.forms import EstiloTailwindMixin
+from core.forms import EstiloBootstrapMixin
 from core.validators import normalizar_cuit
 
 from .models import Proveedor
 
 
-class ProveedorForm(EstiloTailwindMixin, forms.ModelForm):
+class ProveedorForm(EstiloBootstrapMixin, forms.ModelForm):
     class Meta:
         model = Proveedor
         fields = (
