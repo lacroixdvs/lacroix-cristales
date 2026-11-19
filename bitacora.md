@@ -242,3 +242,45 @@
 **Siguiente**
 
 - Fase 9: README final, cierre de bitácora y verificación integral del MVP.
+
+## 2026-11-18 — Fase 9: cierre del proyecto y documentación final (EFI)
+
+**Qué se hizo**
+
+- Se creó `core/management/commands/cargar_datos_demo.py`: comando idempotente que siembra 3 usuarios (ADM/VENDEDOR/USUARIO con contraseña `Demo1234!`), 3 proveedores de vidrio/herrajes, 4 clientes con descuentos 15/10/5/0 %, 8 productos (2 por categoría: VIDRIO, MAMPARA, ESPEJO, CERRAMIENTO) y 2 ventas de ejemplo (una confirmada vía servicios con descuento y stock descontado, una en borrador). Llama a `cargar_roles` con salida capturada y usa claves naturales para no duplicar nada.
+- Se agregaron 3 tests en `core/test_datos_demo.py` que cubren carga inicial, idempotencia, roles y totales de la venta confirmada y que el borrador no toca stock.
+- Se redactó el `README.md` definitivo: dominio real de Vit Cristales, arquitectura híbrida MVT + Tailwind CDN + API DRF/JWT/Swagger, DER lógico con entidades/atributos/cardinalidades/reglas de integridad, matriz completa de roles, tabla de endpoints Web/API/JWT/Swagger, guía de instalación en Windows y Linux, ejecución de `cargar_roles`/`cargar_datos_demo`, verificación de 159 tests, guía Docker/Render y sección visible "Deploy productivo" para completar la URL.
+- Se marcaron todas las apps y módulos como completados en `proyecto.md`, se actualizó `memoria.md` al estado final de 9/9 fases y se cerró esta bitácora con el checklist del MVP.
+
+**Archivos tocados**
+
+- Creados: `core/management/__init__.py`, `core/management/commands/__init__.py`, `core/management/commands/cargar_datos_demo.py`, `core/test_datos_demo.py`.
+- Modificados: `README.md`, `proyecto.md`, `memoria.md`, `bitacora.md`.
+- Git: **ningún comando ejecutado**.
+
+**Verificaciones**
+
+- `python manage.py check`: **ejecutado, sin problemas**.
+- `python manage.py cargar_datos_demo`: **ejecutado dos veces sobre la DB de desarrollo**. Primera pasada: 20 creados, 0 existentes. Segunda: 0 creados, 20 existentes. Conteos invariantes (3 usuarios, 3 proveedores, 4 clientes, 8 productos, 2 ventas, 5 detalles), stock invariante (VID-001 = 116) y totales invariantes (confirmada 2.618.100,00; borrador 1.164.600,00). Idempotencia confirmada.
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **ejecutado**, **159 tests** (156 previos + 3 nuevos), **OK**.
+- `python manage.py spectacular --validate` y `makemigrations --check --dry-run`: verificados en fases anteriores; la Fase 9 no agregó modelos ni migraciones.
+
+**Checklist del MVP verificado**
+
+| Requisito | Estado | Evidencia |
+|---|:---:|---|
+| Autenticación y roles (≥ 2 perfiles) con grupos de Django Auth | ✔ | 3 roles (ADM/VENDEDOR/USUARIO), tests de permisos MVT y API, `rol_de()` |
+| 3 CRUDs completos con baja lógica | ✔ | Usuarios, proveedores, clientes, catálogo y ventas; `activo=False`, nunca borrado físico |
+| Baja lógica excluye inactivos de listados y API | ✔ | Querysets filtrados y tests de `DELETE` sin borrar filas |
+| Mensajes de feedback éxito/error | ✔ | `templates/partials/messages.html` en todas las vistas |
+| Tests de reglas de negocio (no solo smoke) | ✔ | 159 tests: CUIT, descuentos, stock, totales, JWT, permisos, baja, demo |
+| API REST con JWT y documentación | ✔ | `/api/token/`, `/api/schema/`, `/api/schema/swagger/`, esquema sin warnings |
+| Base de datos en producción y variables de entorno | ✔ | `DATABASE_URL` + PostgreSQL en `render.yaml`/compose; secretos fuera del repo |
+| Empaquetado y despliegue configurado | ✔* | Dockerfile multi-stage, compose con Postgres 16, Blueprint de Render. *Sin ejecución real de Docker ni deploy: no hay Docker local y el enlace público queda por completar.* |
+| Documentación (README, memoria, proyecto, bitácora, diseño) | ✔ | README definitivo con DER, matriz, endpoints y guías; archivos actualizados |
+
+**Estado final:** 9 de 9 fases completadas. Único paso externo pendiente: completar la URL de Render en el README y cargar los secretos en el panel del proveedor.
+
+**Siguiente**
+
+- Cierre de la entrega: el usuario integra esta rama y completa el enlace al deploy productivo.

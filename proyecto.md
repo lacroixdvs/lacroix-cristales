@@ -7,7 +7,7 @@
 
 Sistema de gestión para Vit Cristales (vidrios, mamparas de vidrio, espejos y cerramientos de oficinas). Cubre proveedores, clientes mayoristas, catálogo de artículos, ventas con control de stock, tres perfiles de acceso, API REST y despliegue en la nube.
 
-## Árbol objetivo
+## Árbol del proyecto
 
 ```text
 lacroix-cristales/
@@ -21,7 +21,8 @@ lacroix-cristales/
 │   ├── urls.py
 │   ├── asgi.py
 │   └── wsgi.py
-├── core/                 # home, dashboard por rol, partials, templatetags
+├── core/                 # home, dashboard por rol, partials, templatetags,
+                          # command cargar_datos_demo (Fase 9)
 ├── usuarios/             # Usuario custom (AbstractUser), señales, forms, mixins,
                           # management commands (cargar_roles), views, urls, tests
 ├── clientes/             # Cliente mayorista: validators, forms, views, urls,
@@ -66,14 +67,18 @@ lacroix-cristales/
 
 | App | Responsabilidad | Estado |
 |---|---|---|
-| `config` | Configuración por ambiente, URLs raíz, WSGI/ASGI | Creada en Fase 2 (check OK) |
-| `core` | Home, dashboard según rol, tags de rol y tests de humo | Creada en Fase 3 (check OK, 4 tests) |
-| `usuarios` | `Usuario` custom, señales de roles, `cargar_roles`, auth y CRUD de usuarios | Completa en Fase 4 (check OK, 15 tests) |
-| `proveedores` | CRUD de proveedores con baja lógica | Completa en Fase 6 (check OK, 16 tests) |
-| `clientes` | CRUD de clientes mayoristas con baja lógica, validación de CUIT y descuento | Completa en Fase 5 (check OK, 25 tests) — patrón de referencia |
-| `catalogo` | Productos, baja lógica y presupuesto en sesión | Completa en Fase 6 (check OK, 20 tests) |
-| `ventas` | Ventas, detalles, totales y control de stock | Completa en Fase 6 (check OK, 22 tests) |
-| `api` | Routers, permisos, filtros, JWT, esquema y Swagger; serializers 3 niveles en cada app de dominio | Completa en Fase 7 (check OK, 54 tests) |
+| `config` | Configuración por ambiente, URLs raíz, WSGI/ASGI | **Completa** (Fase 2; endurecida en Fase 8) |
+| `core` | Home, dashboard según rol, tags de rol, validadores, tests de humo y comando `cargar_datos_demo` | **Completa** (Fase 3 + Fase 9; 7 tests) |
+| `usuarios` | `Usuario` custom, señales de roles, `cargar_roles`, auth y CRUD de usuarios | **Completa** (Fase 4; 15 tests) |
+| `proveedores` | CRUD de proveedores con baja lógica | **Completa** (Fase 6; 16 tests) |
+| `clientes` | CRUD de clientes mayoristas con baja lógica, validación de CUIT y descuento | **Completa** (Fase 5; 25 tests) — patrón de referencia |
+| `catalogo` | Productos, baja lógica y presupuesto en sesión | **Completa** (Fase 6; 20 tests) |
+| `ventas` | Ventas, detalles, totales y control de stock | **Completa** (Fase 6; 22 tests) |
+| `api` | Routers, permisos, filtros, JWT, esquema y Swagger; serializers 3 niveles en cada app de dominio | **Completa** (Fase 7; 54 tests) |
+| Despliegue | `Dockerfile`, `entrypoint.sh`, `docker-compose.yml`, `render.yaml`, `.env.example` | **Completo** (Fase 8; check OK, sin runtime Docker local) |
+| Documentación | `README.md` definitivo, checklist del MVP y cierre de bitácora | **Completa** (Fase 9) |
+
+**Estado global:** 9 de 9 fases completadas, **159 tests OK**. Todas las apps y módulos están finalizados.
 
 ## Capa de presentación (Fase 3)
 
@@ -195,7 +200,14 @@ Acciones de ventas: `POST /api/ventas/<id>/confirmar/`, `POST /api/ventas/<id>/c
 - **`docker-compose.yml`:** servicio `web` + PostgreSQL 16 con `pg_isready` healthcheck y `depends_on: service_healthy`; volúmenes persistentes para DB, estáticos y media; HTTPS desactivado para probar por HTTP local.
 - **`render.yaml`:** Blueprint con DB `free`, web Docker en rama `develop`, `SECRET_KEY` generado, `DATABASE_URL` inyectada desde la DB y credenciales S3/admin como `sync: false` (sin secretos en el repo).
 - **Dependencias nuevas (Fase 8):** `django-storages>=1.14,<2.0` y `boto3>=1.34,<2.0`, necesarias solo cuando se activa el storage S3.
-- **Estado de verificación:** `check` en dev y production OK, 156 tests OK, YAML parseado y `entrypoint.sh` con LF. Docker no está disponible localmente: imagen y compose sin probar en runtime.
+- **Estado de verificación:** `check` en dev y production OK, 159 tests OK, YAML parseado y `entrypoint.sh` con LF. Docker no está disponible localmente: imagen y compose sin probar en runtime.
+
+## Datos de demostración (Fase 9)
+
+- `core/management/commands/cargar_datos_demo.py`: comando **idempotente** para la demo frente al tribunal. Llama a `cargar_roles`, crea 3 usuarios (`demo_admin`, `demo_vendedor`, `demo_usuario`), 3 proveedores, 4 clientes con descuentos 15/10/5/0 %, 8 productos (2 por categoría) y 2 ventas (una confirmada vía `services.confirmar_venta` con descuento y stock descontado; un borrador sin afectar stock).
+- Contraseña demo por defecto: `Demo1234!` (configurable con `--password`).
+- Claves naturales para la idempotencia: `username`, `cuit`, `codigo` y `observaciones` marcadas con `[DEMO cargar_datos_demo]`. Una segunda ejecución no duplica filas ni vuelve a descontar stock.
+- Cubierto por 3 tests en `core/test_datos_demo.py`: carga inicial + idempotencia, roles y totales, borrador sin impacto de stock.
 
 ## Convenciones
 
