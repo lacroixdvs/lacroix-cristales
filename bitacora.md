@@ -276,14 +276,14 @@
 | Tests de reglas de negocio (no solo smoke) | ✔ | 159 tests: CUIT, descuentos, stock, totales, JWT, permisos, baja, demo |
 | API REST con JWT y documentación | ✔ | `/api/token/`, `/api/schema/`, `/api/schema/swagger/`, esquema sin warnings |
 | Base de datos en producción y variables de entorno | ✔ | `DATABASE_URL` + PostgreSQL en `render.yaml`/compose; secretos fuera del repo |
-| Empaquetado y despliegue configurado | ✔* | Dockerfile multi-stage, compose con Postgres 16, Blueprint de Render. *Sin ejecución real de Docker ni deploy: no hay Docker local y el enlace público queda por completar.* |
+| Empaquetado y despliegue configurado | ✔ | Dockerfile multi-stage, compose con Postgres 16, Blueprint de Render. Deploy real funcionando en [https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com) con PostgreSQL. |
 | Documentación (README, memoria, proyecto, bitácora, diseño) | ✔ | README definitivo con DER, matriz, endpoints y guías; archivos actualizados |
 
-**Estado final:** 9 de 9 fases completadas. Único paso externo pendiente: completar la URL de Render en el README y cargar los secretos en el panel del proveedor.
+**Estado final:** 9 de 9 fases completadas y checklist del MVP **100 % completado**. Deploy productivo publicado en [https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com) con PostgreSQL sobre Docker en Render. Sin pasos externos pendientes.
 
-**Siguiente**
+**Cierre**
 
-- Cierre de la entrega: el usuario integra esta rama y completa el enlace al deploy productivo.
+- Entrega cerrada: aplicación desplegada y funcionando, enlace público documentado en el README y secretos cargados en el panel del proveedor sin publicarlos en el repositorio.
 
 ## 2026-11-18 — Refactor UI: Tailwind → Bootstrap 5.3
 
@@ -337,3 +337,23 @@
 - `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **159 tests, OK**.
 - Selectores críticos confirmados presentes: `buscador-articulos`, `resultados-articulos`, `modal-base`, `data-modal-open`, `data-modal-close` y `data-live-search`.
 - Git: **ningún comando ejecutado**. El trabajo quedó en la rama `refactor/ui-pulido-visual` para que el usuario lo integre.
+
+## 2026-11-19 — Publicación del deploy productivo y cierre del MVP
+
+**Qué se hizo**
+
+- Se confirmó que la aplicación está desplegada y funcionando en **[https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com)**, con PostgreSQL y Docker en Render.
+- Se reemplazó el marcador pendiente de la sección "Deploy productivo" del `README.md` por la URL oficial, se agregó el estado productivo y se aclaró que las credenciales demo se entregan por canal privado.
+- Se actualizó la nota de verificación del README: la ausencia de Docker local ya no impide dar por validado el runtime, porque el deploy en Render ejecutó la imagen real contra PostgreSQL.
+- Se actualizó `memoria.md` (fecha, estado, URL oficial, checklist 100 % y recordatorios de despliegue) y esta bitácora (fila de empaquetado/despliegue, estado final y cierre sin pendientes).
+- El checklist del MVP quedó **100 % completado**: 9 de 9 fases, documentación, despliegue y enlace público.
+
+**Archivos tocados**
+
+- Modificados (documentación): `README.md`, `memoria.md`, `bitacora.md`.
+- No modificados: código, templates, estilos, scripts, modelos, vistas, URLs ni settings.
+
+**Verificaciones**
+
+- URL productiva verificada por el usuario: [https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com).
+- Git: **ningún comando ejecutado**.

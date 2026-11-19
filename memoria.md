@@ -5,12 +5,13 @@
 
 ## Estado actual
 
-- **Fecha:** 2026-11-18
+- **Fecha:** 2026-11-19
 - **Fase:** 9 de 9 — Cierre del proyecto y documentación final para la EFI, **completada**
 - **Ubicación:** `C:\Users\Nico\Desktop\lacroix-cristales`
 - **Nombre comercial:** Vit Cristales (documentación e interfaz). La carpeta conserva el nombre `lacroix-cristales`.
 - **Código generado:** `manage.py`, `config/`, `core`, `usuarios`, `clientes`, `proveedores`, `catalogo`, `ventas`, `api`, artefactos de deploy (`Dockerfile`, `docker-compose.yml`, `render.yaml`, `entrypoint.sh`, `.dockerignore`), comando `cargar_datos_demo` y documentación final (`README.md`, `proyecto.md`, `bitacora.md`). **Proyecto completo.**
-- **Verificación:** `python manage.py check` (dev y production) sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` y `cargar_datos_demo` ejecutados (el segundo dos veces, sin duplicados), esquema OpenAPI validado sin errores ni warnings y **159 tests OK** con settings de testing. Docker no está disponible localmente: imagen y compose sin validación de runtime. El refactor UI a Bootstrap 5.3 se verificó con `check` y los mismos **159 tests OK**.
+- **Verificación:** `python manage.py check` (dev y production) sin problemas, `migrate` ejecutado en desarrollo, `cargar_roles` y `cargar_datos_demo` ejecutados (el segundo dos veces, sin duplicados), esquema OpenAPI validado sin errores ni warnings y **159 tests OK** con settings de testing. El refactor UI a Bootstrap 5.3 y el pulido visual se verificaron con `check` y los mismos **159 tests OK**. Docker no está disponible localmente, pero el despliegue real en Render validó la imagen y el runtime en producción.
+- **Deploy productivo:** [https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com) — aplicación funcionando con PostgreSQL sobre Docker en Render. Checklist del MVP **100 % completado**.
 
 ## Stack definido
 
@@ -138,7 +139,7 @@
 - El comando llama a `cargar_roles` con `stdout` capturado en `StringIO` (solo se muestra con `-v 2`) para garantizar que los grupos existan antes de crear usuarios y no ensuciar la salida. La contraseña demo es `Demo1234!` y se puede cambiar con `--password`.
 - La venta confirmada se arma con `services.agregar_detalle()` y `services.confirmar_venta()`, por lo que descuenta stock y aplica el 15 % del cliente; el borrador solo agrega ítems. En la segunda ejecución no se recrean ni se vuelve a descontar stock: se verificó que conteos, stock y totales quedan idénticos (3/3/4/8/2/5; VID-001 en 116; confirmada 2.618.100,00; borrador 1.164.600,00).
 - Se agregaron 3 tests en `core/test_datos_demo.py` (carga inicial + idempotencia, roles/venta confirmada, borrador sin stock) llevando la suite de 156 a **159 tests**.
-- El `README.md` definitivo incluye dominio, arquitectura híbrida, DER lógico con cardinalidades y reglas de integridad, matriz completa de roles, tabla de endpoints MVT/API/JWT/Swagger, guía de instalación, comandos demo, verificación, Docker/Render y un espacio visible para completar el enlace al deploy productivo.
+- El `README.md` definitivo incluye dominio, arquitectura híbrida, DER lógico con cardinalidades y reglas de integridad, matriz completa de roles, tabla de endpoints MVT/API/JWT/Swagger, guía de instalación, comandos demo, verificación, Docker/Render y la sección "Deploy productivo" con la URL oficial.
 - No se ejecutó ningún comando de Git en ninguna fase; la integración la realizó el usuario en cada rama.
 
 ## Registro del refactor UI (Tailwind → Bootstrap 5.3)
@@ -161,13 +162,21 @@
 - Regla respetada: no se modificaron `static/js/live-search.js`, `static/js/modales.js`, ni ningún `id`, `name`, `action`, `method`, atributo `data-*` o bloque Django funcional. Se verificaron `buscador-articulos`, `resultados-articulos`, `modal-base`, `data-modal-open`, `data-modal-close` y los parámetros de paginación.
 - Verificación: `manage.py check` sin problemas y **159 tests OK** con `config.settings.testing`. No se ejecutó ningún comando de Git; la rama de trabajo es `refactor/ui-pulido-visual`.
 
+## Registro del deploy productivo (2026-11-19)
+
+- La aplicación está desplegada y funcionando en **[https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com)**, con PostgreSQL y Docker en Render.
+- Se reemplazó el marcador pendiente de la sección "Deploy productivo" del `README.md` por la URL oficial; las credenciales de demostración se entregan por canal privado y no se publican secretos en el repositorio.
+- El MVP quedó **100 % completado**: las 9 fases, el checklist completo y el enlace público ya no están pendientes.
+- El hecho de no tener Docker en el entorno de desarrollo ya no es un bloqueante de verificación: el deploy en Render validó la imagen y el arranque real (`migrate` → `cargar_roles` → `collectstatic` → Gunicorn) contra PostgreSQL.
+- No se ejecutó ningún comando de Git; la documentación se actualizó en el estado actual del proyecto.
+
 ## Pendientes
 
 - **Fase 6:** completada (proveedores, catálogo, presupuesto en sesión, ventas con totales y control de stock). Verificado con `check`, `migrate`, `cargar_roles` y 102 tests OK.
 - **Fase 7:** completada (ViewSets, routers, serializers 3 niveles, JWT, filtros, baja lógica, Swagger en `/api/schema/swagger/`). Verificado con `check`, `spectacular --validate` (0 errores/warnings) y 156 tests OK.
 - **Fase 8:** completada (Docker multi-stage, entrypoint, compose con Postgres 16, production.py hardened, render.yaml y .env.example). Verificado con `check` dev/production y 156 tests OK. Sin validación de runtime Docker por falta de Docker local.
 - **Fase 9:** completada (datos demo idempotentes, README definitivo, matriz/endpoints/DER, checklist del MVP y cierre de bitácora). Verificado con `check`, `cargar_datos_demo ×2` y 159 tests OK.
-- **Estado:** las 9 fases están completadas. Único pendiente **externo**: completar la URL del deploy productivo en el README y cargar secretos en Render.
+- **Estado:** las 9 fases y el checklist del MVP están **100 % completados**. Deploy productivo publicado en [https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com). Sin pendientes externos.
 
 ## Riesgos y recordatorios
 
@@ -177,6 +186,6 @@
 - El cambio de estado de la venta y el movimiento de stock deben ocurrir en la misma transacción.
 - No instalar dependencias nuevas sin justificar y consultar. En Fase 8 se agregaron `django-storages` y `boto3` a `requirements.txt` (aprobado para storage S3 condicional), pero no se instalaron en el `.venv` local.
 - No tocar `.env`, CORS, CSRF, `ALLOWED_HOSTS` ni settings de seguridad sin advertirlo antes. En Fase 8 se amplió `.env.example` y se hicieron configurables por entorno las cabeceras HTTPS de `production.py`, sin modificar base/development/testing.
-- Antes de desplegar: generar `SECRET_KEY`, cargar `ADMIN_PASSWORD` y las credenciales S3 en el panel de Render, y recordar que `render.yaml` apunta a la rama `develop`.
-- Cierre EF: completar el enlace "Deploy productivo" del README con la URL real de Render después del primer deploy; la imagen Docker sigue sin validación de runtime porque no hay Docker en el entorno de desarrollo.
+- Desplegado: `SECRET_KEY`, `ADMIN_PASSWORD` y las credenciales S3 se cargaron en el panel de Render; `render.yaml` apunta a la rama `develop` y el deploy es automático. No publicar secretos en el repositorio.
+- Cierre EF: completado con la URL real [https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com). La imagen Docker quedó validada en runtime por el deploy en Render, aunque no exista Docker local.
 - Los importes se manejan con `Decimal`, nunca con `float`.

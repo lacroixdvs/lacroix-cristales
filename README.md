@@ -290,15 +290,17 @@ En compose las cabeceras HTTPS se desactivan (`SECURE_SSL_REDIRECT=False`, cooki
 
 `production.py` lee todo desde entorno: hosts y CSRF (con soporte automático para `RENDER_EXTERNAL_HOSTNAME` y `.onrender.com`), PostgreSQL vía `dj-database-url` con `conn_max_age=600` y health checks, WhiteNoise y storage S3 condicional (`USE_SUPABASE_STORAGE=True` + credenciales completas).
 
-> **Nota de verificación:** el entorno de desarrollo no tenía Docker instalado, por lo que la imagen y el compose se validaron por sintaxis YAML y `check` de producción, pero no se ejecutó `docker build` localmente.
+> **Nota de verificación:** el entorno de desarrollo no tenía Docker instalado, por lo que la imagen y el compose se validaron por sintaxis YAML y `check` de producción. El deploy real en Render con PostgreSQL confirma el funcionamiento de la imagen y del entorno productivo; ver [Deploy productivo](#deploy-productivo).
 
 ---
 
 ## Deploy productivo
 
-**Enlace al deploy:** _[completar aquí la URL pública de Render, por ejemplo `https://vit-cristales.onrender.com`]_
+**Enlace al deploy:** [https://lacroix-cristales.onrender.com](https://lacroix-cristales.onrender.com)
 
-**Credenciales de demostración en producción:** _[completar solo si el tribunal debe usarlas; no publicar secretos reales]_
+**Estado:** aplicación desplegada y funcionando en producción con PostgreSQL sobre Docker en Render (checklist del MVP **100 % completado**).
+
+**Credenciales de demostración:** se entregan por canal privado; no se publican secretos en este repositorio.
 
 ---
 
