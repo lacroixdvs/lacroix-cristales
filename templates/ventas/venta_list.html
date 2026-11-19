@@ -6,7 +6,10 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
   <div>
     <h1 class="h2 fw-bold mb-1">Ventas</h1>
-    <p class="text-body-secondary small mb-0">Borradores, ventas confirmadas y control de stock.</p>
+    <p class="text-body-secondary small mb-0">
+      Borradores, ventas confirmadas y control de stock.
+      <span class="badge rounded-pill text-bg-light border text-secondary ms-1">{{ page_obj.paginator.count }}</span>
+    </p>
   </div>
   <a href="{% url 'ventas:venta-create' %}" class="btn btn-vit">
     <i class="bi bi-receipt me-1" aria-hidden="true"></i>Nueva venta

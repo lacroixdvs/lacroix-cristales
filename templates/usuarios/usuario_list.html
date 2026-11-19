@@ -6,7 +6,10 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
   <div>
     <h1 class="h2 fw-bold mb-1">Usuarios</h1>
-    <p class="text-body-secondary small mb-0">Administración de cuentas y perfiles de acceso.</p>
+    <p class="text-body-secondary small mb-0">
+      Administración de cuentas y perfiles de acceso.
+      <span class="badge rounded-pill text-bg-light border text-secondary ms-1">{{ page_obj.paginator.count }}</span>
+    </p>
   </div>
   <a href="{% url 'usuarios:usuario-create' %}" class="btn btn-vit">
     <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Nuevo usuario

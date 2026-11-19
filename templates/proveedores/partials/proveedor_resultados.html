@@ -41,7 +41,15 @@
           </td>
         </tr>
       {% empty %}
-        <tr><td colspan="7" class="text-body-secondary py-3">No hay proveedores para mostrar.</td></tr>
+        <tr>
+          <td colspan="7" class="py-4">
+            <div class="vit-empty text-center">
+              <i class="bi bi-truck fs-2 d-block mb-2" aria-hidden="true"></i>
+              <span class="fw-semibold small d-block">No hay proveedores para mostrar.</span>
+              <span class="text-body-secondary small d-block mt-1">Probá con otro término o ajustá los filtros.</span>
+            </div>
+          </td>
+        </tr>
       {% endfor %}
     </tbody>
   </table>

@@ -3,25 +3,113 @@
 {% block title %}Inicio — Vit Cristales{% endblock %}
 
 {% block content %}
-<section class="card border-0 shadow-sm">
-  <div class="card-body p-4 p-md-5">
-    <p class="text-uppercase small fw-semibold text-vit mb-2">Vit Cristales</p>
-    <h1 class="h2 fw-bold">
-      Vidrios, mamparas, espejos y cerramientos de oficinas
-    </h1>
-    <p class="mt-3 text-body-secondary small">
-      Gestión interna de proveedores, clientes mayoristas, catálogo de artículos y ventas.
-    </p>
-    <div class="mt-4 d-flex flex-wrap gap-2">
-      {% if request.user.is_authenticated %}
-        <a href="{% url 'core:dashboard' %}" class="btn btn-vit">
-          <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>Ir al dashboard
-        </a>
-      {% else %}
-        <a href="{% url 'usuarios:login' %}" class="btn btn-vit">
-          <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Ingresar
-        </a>
-      {% endif %}
+{% if request.user.is_authenticated %}
+  {% url 'catalogo:producto-list' as linea_url %}
+{% else %}
+  {% url 'usuarios:login' as linea_url %}
+{% endif %}
+
+<section class="vit-hero card border-0 shadow-sm overflow-hidden">
+  <div class="card-body p-4 p-lg-5">
+    <div class="row align-items-center g-4">
+      <div class="col-12 col-lg-8">
+        <p class="vit-eyebrow text-vit mb-3">Vit Cristales · Soluciones en vidrio</p>
+        <h1 class="display-6 fw-bold lh-sm mb-3">
+          Vidrios, mamparas, espejos y cerramientos de oficinas
+        </h1>
+        <p class="vit-hero-lead text-body-secondary mb-4">
+          Gestión interna de proveedores, clientes mayoristas, catálogo de artículos y ventas,
+          con totales y control de stock en un solo lugar.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          {% if request.user.is_authenticated %}
+            <a href="{% url 'core:dashboard' %}" class="btn btn-vit px-4">
+              <i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Ir al dashboard
+            </a>
+            <a href="{% url 'catalogo:presupuesto' %}" class="btn btn-outline-secondary px-4">
+              <i class="bi bi-file-earmark-ruled me-2" aria-hidden="true"></i>Ver presupuesto
+            </a>
+          {% else %}
+            <a href="{% url 'usuarios:login' %}" class="btn btn-vit px-4">
+              <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Ingresar
+            </a>
+            <a href="{% url 'usuarios:registro' %}" class="btn btn-outline-secondary px-4">
+              <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Crear cuenta
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-12 col-lg-4 d-none d-lg-flex justify-content-end" aria-hidden="true">
+        <i class="bi bi-layers vit-hero-mark"></i>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+      <p class="vit-eyebrow text-vit mb-1">Soluciones en vidrio</p>
+      <h2 class="h4 fw-bold mb-0">Nuestras líneas de producto</h2>
+    </div>
+    <p class="text-body-secondary small mb-0">Catálogo vigente con precios y stock actualizados.</p>
+  </div>
+
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3">
+    <div class="col">
+      <article class="card card-hover h-100">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="vit-kpi-icon mb-3"><i class="bi bi-layers" aria-hidden="true"></i></div>
+          <h3 class="h6 fw-bold mb-2">Vidrios</h3>
+          <p class="text-body-secondary small mb-4">Vidrios comunes, laminados y templados para cada proyecto.</p>
+          <a href="{{ linea_url }}" class="btn btn-sm btn-outline-primary mt-auto align-self-start">
+            {% if request.user.is_authenticated %}Ver catálogo{% else %}Ingresar para ver{% endif %}
+            <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div class="col">
+      <article class="card card-hover h-100">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="vit-kpi-icon mb-3"><i class="bi bi-columns-gap" aria-hidden="true"></i></div>
+          <h3 class="h6 fw-bold mb-2">Mamparas</h3>
+          <p class="text-body-secondary small mb-4">Divisiones y cerramientos vidriados para espacios de trabajo.</p>
+          <a href="{{ linea_url }}" class="btn btn-sm btn-outline-primary mt-auto align-self-start">
+            {% if request.user.is_authenticated %}Ver catálogo{% else %}Ingresar para ver{% endif %}
+            <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div class="col">
+      <article class="card card-hover h-100">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="vit-kpi-icon mb-3"><i class="bi bi-brightness-high" aria-hidden="true"></i></div>
+          <h3 class="h6 fw-bold mb-2">Espejos</h3>
+          <p class="text-body-secondary small mb-4">Espejos a medida para baños, vestuarios y recepciones.</p>
+          <a href="{{ linea_url }}" class="btn btn-sm btn-outline-primary mt-auto align-self-start">
+            {% if request.user.is_authenticated %}Ver catálogo{% else %}Ingresar para ver{% endif %}
+            <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div class="col">
+      <article class="card card-hover h-100">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="vit-kpi-icon mb-3"><i class="bi bi-building" aria-hidden="true"></i></div>
+          <h3 class="h6 fw-bold mb-2">Cerramientos de oficina</h3>
+          <p class="text-body-secondary small mb-4">Sistemas vidriados que separan ambientes sin perder luz.</p>
+          <a href="{{ linea_url }}" class="btn btn-sm btn-outline-primary mt-auto align-self-start">
+            {% if request.user.is_authenticated %}Ver catálogo{% else %}Ingresar para ver{% endif %}
+            <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
+        </div>
+      </article>
     </div>
   </div>
 </section>

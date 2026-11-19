@@ -313,3 +313,27 @@
 - `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **159 tests, OK**.
 - Búsqueda de clases Tailwind en `.html`, `.py` y `.css`: **sin coincidencias**.
 - Git: **ningún comando ejecutado**. El trabajo quedó en la rama `refactor/ui-bootstrap` para que el usuario lo integre.
+
+## 2026-11-18 — Pulido visual: tipografía, portada y KPIs
+
+**Qué se hizo**
+
+- `templates/base.html` incorpora Google Fonts (Plus Jakarta Sans para títulos y encabezados; Inter para texto y tablas) con `preconnect` y `display=swap`, sin reemplazar Bootstrap, Icons ni los scripts propios.
+- `static/css/vit-cristales.css` se refinó manteniendo la paleta: tarjetas con borde gris hielo, radio `0.75rem` y sombra suave (`.card-hover` con elevación discreta), navbar `sticky` translúcido con `backdrop-filter: blur(8px)`, transiciones suaves en botones/tarjetas/enlaces, `thead` tenue con tipografía prolija y hover de fila casi imperceptible. Los `<dialog>` recibieron borde y radio coherentes.
+- `templates/home.html` estrenó hero sobrio `.vit-hero` con CTA según sesión (dashboard + presupuesto si está logueado; ingresar + crear cuenta si no) y cuatro tarjetas de líneas de producto — Vidrios, Mamparas, Espejos y Cerramientos — con Bootstrap Icons y acceso al catálogo o al login.
+- `core/views.py` sumó `STOCK_BAJO = 10` (solo informativo) y `DashboardView._kpis()`, indicadores reales y de solo lectura por rol: ADM (productos activos, stock bajo, clientes activos, ventas confirmadas), VENDEDOR (mis ventas, borradores, productos activos, stock bajo) y USUARIO (productos disponibles, ítems en presupuesto desde sesión, categorías). `templates/core/dashboard.html` los renderiza como tarjetas con ícono lateral y tono sobrio.
+- Los listados de usuarios, proveedores, clientes, catálogo y ventas ganaron contador discreto junto al subtítulo (`page_obj.paginator.count`) y estados vacíos prolijos con ícono y sugerencia dentro de `{% empty %}`.
+
+**Archivos tocados**
+
+- Modificados: `templates/base.html`, `static/css/vit-cristales.css`, `templates/home.html`, `templates/core/dashboard.html`, `core/views.py`.
+- Modificados: `templates/{usuarios,proveedores,clientes,catalogo,ventas}/*_list.html` y sus `partials/*_resultados.html`.
+- Modificados (documentación): `design.md`, `memoria.md`, `bitacora.md`.
+- No modificados: `static/js/live-search.js`, `static/js/modales.js`, modelos, URLs, permisos, serializers, servicios ni atributos funcionales (`id`, `name`, `action`, `method`, `data-*`, bloques Django).
+
+**Verificaciones**
+
+- `python manage.py check` con `config.settings.development`: **sin problemas**.
+- `DJANGO_SETTINGS_MODULE=config.settings.testing python manage.py test`: **159 tests, OK**.
+- Selectores críticos confirmados presentes: `buscador-articulos`, `resultados-articulos`, `modal-base`, `data-modal-open`, `data-modal-close` y `data-live-search`.
+- Git: **ningún comando ejecutado**. El trabajo quedó en la rama `refactor/ui-pulido-visual` para que el usuario lo integre.

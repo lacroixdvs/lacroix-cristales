@@ -17,7 +17,7 @@
 | Capa | Elección |
 |---|---|
 | Backend web | Django 5.x con MVT (Templates) |
-| Frontend | Bootstrap 5.3 + Bootstrap Icons 1.11 vía CDN, CSS institucional propio, JS vanilla, `<dialog>` nativo, live search |
+| Frontend | Bootstrap 5.3 + Bootstrap Icons 1.11 vía CDN, Google Fonts (Plus Jakarta Sans / Inter), CSS institucional propio, JS vanilla, `<dialog>` nativo, live search |
 | API | Django REST Framework + `django-filter` + `drf-spectacular` + `djangorestframework-simplejwt` |
 | Autenticación | Sesiones para MVT; JWT (access/refresh) para API; grupos de Django Auth |
 | Base de datos | SQLite en desarrollo; PostgreSQL en producción |
@@ -150,6 +150,16 @@
 - Los filtros de presentación `badge_categoria` y `badge_estado` ahora devuelven clases `text-bg-*` de Bootstrap.
 - Regla respetada: no se modificaron `static/js/live-search.js` ni `static/js/modales.js`, ni ningún `id`, `name`, `action`, `method`, atributo `data-*` o bloque `{% if %}` / `{% for %}` funcional. Se conservaron `buscador-articulos`, `resultados-articulos`, `modal-base` y `data-modal-close`.
 - Verificación: `manage.py check` sin problemas y **159 tests OK** con `config.settings.testing`. No se ejecutó ningún comando de Git; la rama de trabajo es `refactor/ui-bootstrap`.
+
+## Registro del pulido visual (`refactor/ui-pulido-visual`)
+
+- Se agregaron Google Fonts en `templates/base.html`: **Plus Jakarta Sans** para títulos/encabezados y **Inter** para texto y tablas, con `preconnect` y `display=swap`. Bootstrap, Icons y los dos `<script defer>` propios siguen igual.
+- `static/css/vit-cristales.css` se refinó sin cambiar la paleta: `.card` con borde fino gris hielo, `border-radius: 0.75rem` y sombra suave; `.card-hover` con elevación sutil; navbar `sticky` y translúcido con `backdrop-filter: blur(8px)`; transiciones de `0.2s ease` en botones, tarjetas y nav links; `thead` con fondo `#f1f5f9`, tipografía 0.72rem en mayúsculas y hover de fila verde al 4.5%. El `<dialog>` también recibió borde y radio acordes.
+- `templates/home.html` pasó a un hero sobrio (`.vit-hero`) con CTA según sesión — autenticado: dashboard y presupuesto; invitado: ingresar y crear cuenta — más cuatro tarjetas de líneas de producto con íconos de Bootstrap Icons y enlace al catálogo/login.
+- `core/views.py` incorpora `STOCK_BAJO = 10` (umbral solo informativo) y `DashboardView._kpis()`, que calcula indicadores **de solo lectura** por rol usando los mismos filtros que los listados: ADM (productos activos, stock bajo, clientes activos, ventas confirmadas), VENDEDOR (mis ventas, borradores, productos activos, stock bajo) y USUARIO (productos disponibles, ítems en presupuesto desde sesión, categorías). `templates/core/dashboard.html` los muestra como tarjetas con ícono lateral (`vit-kpi-icon` y variantes de tono).
+- Los cinco listados (usuarios, proveedores, clientes, catálogo y ventas) llevan contador discreto `{{ page_obj.paginator.count }}` junto al subtítulo y estados vacíos prolijos (`.vit-empty`: ícono tenue, mensaje y sugerencia de ajustar filtros) dentro de `{% empty %}`, sin tocar `colspan` ni `query_base`.
+- Regla respetada: no se modificaron `static/js/live-search.js`, `static/js/modales.js`, ni ningún `id`, `name`, `action`, `method`, atributo `data-*` o bloque Django funcional. Se verificaron `buscador-articulos`, `resultados-articulos`, `modal-base`, `data-modal-open`, `data-modal-close` y los parámetros de paginación.
+- Verificación: `manage.py check` sin problemas y **159 tests OK** con `config.settings.testing`. No se ejecutó ningún comando de Git; la rama de trabajo es `refactor/ui-pulido-visual`.
 
 ## Pendientes
 

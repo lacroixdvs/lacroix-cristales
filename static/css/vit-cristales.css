@@ -19,11 +19,47 @@
   --bs-border-color: #e2e8f0;
   --bs-border-color-translucent: rgba(100, 116, 139, 0.18);
 
-  --bs-font-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Tipografía: Inter para texto, Plus Jakarta Sans para encabezados */
+  --vit-font-heading: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bs-font-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Superficies y movimiento */
+  --vit-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -18px rgba(15, 23, 42, 0.18);
+  --vit-shadow-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 14px 32px -16px rgba(15, 23, 42, 0.22);
+  --vit-transition: 0.2s ease;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   min-height: 100vh;
+  font-family: var(--bs-font-sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.display-6,
+.navbar-brand {
+  font-family: var(--vit-font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Navbar discreto y translúcido: el desenfoque se aprecia al desplazarse. */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.navbar.bg-white {
+  background-color: rgba(255, 255, 255, 0.86) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--bs-border-color) !important;
 }
 
 .navbar-brand,
@@ -36,6 +72,31 @@ body {
   color: #fff !important;
 }
 
+/* Tarjetas: borde fino gris hielo, radio suave y sombra contenida. */
+.card {
+  border: 1px solid var(--bs-border-color) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: var(--vit-shadow-card) !important;
+  transition: box-shadow var(--vit-transition), border-color var(--vit-transition),
+              transform var(--vit-transition);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--vit-shadow-hover) !important;
+  border-color: var(--bs-primary-border-subtle) !important;
+}
+
+.btn {
+  transition: background-color var(--vit-transition), border-color var(--vit-transition),
+              color var(--vit-transition), box-shadow var(--vit-transition),
+              transform var(--vit-transition);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
 .btn-vit {
   --bs-btn-bg: var(--bs-primary);
   --bs-btn-border-color: var(--bs-primary);
@@ -45,16 +106,105 @@ body {
   --bs-btn-active-border-color: #14532d;
 }
 
+.btn-vit:hover {
+  box-shadow: 0 6px 16px -8px rgba(21, 128, 61, 0.55);
+}
+
+.nav-link {
+  transition: color var(--vit-transition), background-color var(--vit-transition);
+}
+
+a:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+/* Tablas: encabezado tenue, tipografía prolija y hover casi imperceptible. */
+.table {
+  --bs-table-hover-bg: rgba(21, 128, 61, 0.045);
+}
+
+.table thead th {
+  background-color: #f1f5f9;
+  color: var(--bs-secondary-color);
+  font-family: var(--vit-font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--bs-border-color);
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.table > :not(caption) > * > * {
+  vertical-align: middle;
+}
+
+/* Apoyos visuales para hero, KPIs y estados vacíos. */
+.vit-eyebrow {
+  font-family: var(--vit-font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.vit-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border-color: var(--bs-primary-border-subtle) !important;
+}
+
+.vit-hero-lead {
+  max-width: 46rem;
+}
+
+.vit-hero-mark {
+  font-size: 9rem;
+  line-height: 1;
+  opacity: 0.1;
+  color: var(--bs-primary);
+}
+
+.vit-kpi-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  background-color: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary-text-emphasis);
+}
+
+.vit-kpi-icon--warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.vit-kpi-icon--info {
+  background-color: #e0f2fe;
+  color: #075985;
+}
+
+.vit-empty i {
+  color: #94a3b8;
+}
+
 /* Los <dialog> nativos usados por modales.js se ven como tarjetas Bootstrap. */
 dialog {
-  border: 0;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.75rem;
+  padding: 0;
   max-width: min(32rem, calc(100vw - 2rem));
 }
 
 dialog::backdrop {
   background-color: rgba(15, 23, 42, 0.55);
-}
-
-.table > :not(caption) > * > * {
-  vertical-align: middle;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
